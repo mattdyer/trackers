@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MT Cadastral - Find Your Property</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  #map { width: 100vw; height: 100vh; }
+
+  /* Top bar */
+  #topbar {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    z-index: 1000; background: white; border-radius: 10px;
+    padding: 10px 18px; box-shadow: 0 2px 12px rgba(0,0,0,.25);
+    display: flex; align-items: center; gap: 10px; font-size: 14px;
+    max-width: 95vw;
+  }
+  #topbar button {
+    background: #2563eb; color: white; border: none; border-radius: 6px;
+    padding: 8px 14px; cursor: pointer; font-size: 13px; font-weight: 600;
+  }
+  #topbar button:hover { background: #1d4ed8; }
+  #topbar button:disabled { background: #93c5fd; cursor: default; }
+  #topbar .status { color: #555; font-size: 13px; }
+  #topbar .status.loading { color: #d97706; }
+  #topbar .status.error { color: #dc2626; }
+
+  /* Distance control */
+  #controls {
+    position: absolute; top: 65px; left: 50%; transform: translateX(-50%);
+    z-index: 1000; background: white; border-radius: 10px;
+    padding: 8px 16px; box-shadow: 0 2px 12px rgba(0,0,0,.25);
+    display: flex; align-items: center; gap: 10px; font-size: 13px;
+  }
+  #controls label { color: #555; }
+  #controls select, #controls input {
+    padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;
+  }
+  #controls input[type=range] { width: 120px; }
+  #controls .val { font-weight: 600; min-width: 50px; }
+
+  /* Info panel */
+  #infopanel {
+    position: absolute; bottom: 20px; left: 10px; z-index: 1000;
+    background: white; border-radius: 10px; padding: 0;
+    box-shadow: 0 2px 12px rgba(0,0,0,.25);
+    width: 340px; max-height: 60vh; overflow-y: auto;
+    display: none;
+  }
+  #infopanel .header {
+    padding: 12px 14px; background: #1e293b; color: white;
+    border-radius: 10px 10px 0 0; font-weight: 700; font-size: 15px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  #infopanel .header .close {
+    background: none; border: none; color: white; font-size: 20px;
+    cursor: pointer; padding: 0 4px; line-height: 1;
+  }
+  #infopanel .body { padding: 12px 14px; font-size: 13px; line-height: 1.6; }
+  #infopanel .body .row { display: flex; }
+  #infopanel .body .label { font-weight: 600; color: #475569; min-width: 100px; }
+  #infopanel .body .value { color: #1e293b; }
+  #infopanel .body .value.muted { color: #94a3b8; font-style: italic; }
+  #infopanel .body .section { border-top: 1px solid #e2e8f0; margin-top: 8px; padding-top: 8px; }
+
+  /* Parcel count badge */
+  #parcel-count {
+    position: absolute; bottom: 20px; right: 10px; z-index: 1000;
+    background: #1e293b; color: white; border-radius: 20px;
+    padding: 6px 14px; font-size: 13px; font-weight: 600;
+    box-shadow: 0 2px 12px rgba(0,0,0,.25);
+  }
+
+  /* Custom leaflet overrides */
+  .leaflet-popup-content-wrapper { border-radius: 8px; font-size: 13px; }
+  .leaflet-popup-content { margin: 10px 14px; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <button id="btnLocate" title="Use my current location">📍 Find My Location</button>
+  <span class="status" id="status">Click the button or drag the map to find nearby properties</span>
+</div>
+
+<div id="controls">
+  <label>Search radius:</label>
+  <input type="range" id="radiusSlider" min="50" max="2000" value="200" step="10">
+  <span class="val" id="radiusVal">200 m</span>
+  <label style="margin-left:8px;">Unit:</label>
+  <select id="radiusUnit">
+    <option value="esriSRUnit_Meter">Meters</option>
+    <option value="esriSRUnit_Foot">Feet</option>
+  </select>
+</div>
+
+<div id="map"></div>
+
+<div id="parcel-count">
+  <span id="countText">0 parcels</span>
+</div>
+
+<div id="infopanel">
+  <div class="header">
+    <span id="panelTitle">Property Details</span>
+    <button class="close" onclick="document.getElementById('infopanel').style.display='none'">&times;</button>
+  </div>
+  <div class="body" id="panelBody"></div>
+</div>
+
+<script>
+// ── Map setup ──
+const map = L.map('map', {
+  zoomControl: false
+}).setView([46.8721, -110.3626], 7); // Montana center
+
+L.control.zoom({ position: 'topright' }).addTo(map);
+
+// Free OSM tiles (no API key needed)
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  maxZoom: 19
+}).addTo(map);
+
+// ── State ──
+let userMarker = null;
+let parcelLayer = null;
+let currentLat = null;
+let currentLng = null;
+
+const API = 'https://gisservice.mt.gov/ArcGIS/rest/services/msdi_cadastral_map_v1/MapServer/1/query';
+
+// ── Radius controls ──
+const slider = document.getElementById('radiusSlider');
+const unitSel = document.getElementById('radiusUnit');
+const radiusValEl = document.getElementById('radiusVal');
+
+function getDistanceMeters() {
+  const val = parseFloat(slider.value);
+  const unit = unitSel.value;
+  if (unit === 'esriSRUnit_Foot') return val * 0.3048;
+  return val;
+}
+
+function getDistanceParams() {
+  const val = parseFloat(slider.value);
+  const unit = unitSel.value;
+  return { distance: val, units: unit };
+}
+
+slider.addEventListener('input', () => {
+  const { distance, units } = getDistanceParams();
+  let label;
+  if (units === 'esriSRUnit_Foot') label = `${Math.round(distance)} ft`;
+  else label = `${Math.round(distance)} m`;
+  radiusValEl.textContent = label;
+});
+unitSel.addEventListener('change', () => {
+  slider.dispatchEvent(new Event('input'));
+});
+
+// ── Status helper ──
+function setStatus(msg, type = '') {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status' + (type ? ' ' + type : '');
+}
+
+// ── Format money ──
+function fmt(n) {
+  if (n == null || n === '') return '<span class="muted">N/A</span>';
+  return '$' + Number(n).toLocaleString();
+}
+
+// ── Fetch parcels ──
+async function fetchParcels(lat, lng, maxRecords = 200) {
+  const { distance, units } = getDistanceParams();
+  const params = new URLSearchParams({
+    where: '1=1',
+    outFields: 'PARCELID,OwnerName,CountyName,TaxYear,TotalValue,TotalLandValue,TotalBuildingValue,TotalAcres,AddressLine1,AddressLine2,CityStateZip,PropType,OwnerAddress1,OwnerAddress2,OwnerCity,OwnerState,OwnerZipCode,AssessmentCode,Township,Range,Section,LegalDescriptionShort,Subdivision',
+    geometry: `${lng},${lat}`,
+    geometryType: 'esriGeometryPoint',
+    inSR: '4326',
+    outSR: '4326',
+    distance: distance,
+    units: units,
+    relationOp: 'esriSpatialRelIntersects',
+    f: 'json',
+    returnGeometry: 'true',
+    resultRecordCount: maxRecords,
+  });
+
+  const resp = await fetch(`${API}?${params}`);
+  const data = await resp.json();
+  return data;
+}
+
+// ── Convert ArcGIS geometry to GeoJSON ──
+function toGeoJSONGeom(geom) {
+  if (!geom) return null;
+  if (geom.type) return geom; // already GeoJSON
+  const type = geom.rings ? 'Polygon' : geom.polygons ? 'MultiPolygon' : geom.points ? 'Point' : null;
+  if (type === 'Polygon') return { type: 'Polygon', coordinates: geom.rings };
+  if (type === 'MultiPolygon') return { type: 'MultiPolygon', coordinates: geom.polygons.map(p => p.rings || [p.rings]) };
+  return geom;
+}
+
+// ── Render parcels on map ──
+function renderParcels(features) {
+  if (parcelLayer) map.removeLayer(parcelLayer);
+
+  const geojsonFeatures = features.map(f => ({
+    type: 'Feature',
+    geometry: toGeoJSONGeom(f.geometry),
+    properties: f.attributes
+  }));
+
+  parcelLayer = L.geoJSON(geojsonFeatures, {
+    style: feature => ({
+      color: '#3b82f6',
+      weight: 1.5,
+      opacity: 0.8,
+      fillColor: '#93c5fd',
+      fillOpacity: 0.25,
+    }),
+    onEachFeature: (feature, layer) => {
+      const a = feature.properties;
+      const owner = a.OwnerName || 'Unknown Owner';
+      const address = [a.AddressLine1, a.AddressLine2, a.CityStateZip].filter(Boolean).join(', ');
+      const ownerAddr = [a.OwnerAddress1, a.OwnerAddress2, a.OwnerCity + (a.OwnerState ? ' ' + a.OwnerState : ''), a.OwnerZipCode].filter(Boolean).join(', ');
+
+      // Popup (compact)
+      layer.bindPopup(
+        `<strong>${owner}</strong><br>` +
+        `<em>${address || 'No street address'}</em><br>` +
+        `<span style="color:#64748b">Value: ${fmt(a.TotalValue)}</span>`
+      );
+
+      // Info panel (detailed, on click)
+      layer.on('click', () => {
+        document.getElementById('panelTitle').textContent = owner;
+        document.getElementById('panelBody').innerHTML = `
+          <div class="section">
+            <div class="row"><span class="label">Owner</span><span class="value">${owner}</span></div>
+            ${ownerAddr ? `<div class="row"><span class="label">Mailing Addr</span><span class="value">${ownerAddr}</span></div>` : ''}
+            ${address ? `<div class="row"><span class="label">Property Addr</span><span class="value">${address}</span></div>` : ''}
+            ${a.DbaName ? `<div class="row"><span class="label">DBA</span><span class="value">${a.DbaName}</span></div>` : ''}
+          </div>
+          <div class="section">
+            <div class="row"><span class="label">Total Value</span><span class="value">${fmt(a.TotalValue)}</span></div>
+            <div class="row"><span class="label">Land Value</span><span class="value">${fmt(a.TotalLandValue)}</span></div>
+            <div class="row"><span class="label">Bldg Value</span><span class="value">${fmt(a.TotalBuildingValue)}</span></div>
+            <div class="row"><span class="label">Acres</span><span class="value">${a.TotalAcres != null ? Number(a.TotalAcres).toFixed(3) : 'N/A'}</span></div>
+            <div class="row"><span class="label">Tax Year</span><span class="value">${a.TaxYear || 'N/A'}</span></div>
+          </div>
+          <div class="section">
+            <div class="row"><span class="label">County</span><span class="value">${a.CountyName || 'N/A'}</span></div>
+            <div class="row"><span class="label">Type</span><span class="value">${a.PropType || 'N/A'}</span></div>
+            <div class="row"><span class="label">Geocode</span><span class="value" style="font-family:monospace;font-size:11px">${a.PARCELID || 'N/A'}</span></div>
+            ${a.LegalDescriptionShort ? `<div class="row"><span class="label">Legal Desc</span><span class="value">${a.LegalDescriptionShort}</span></div>` : ''}
+            ${a.Subdivision ? `<div class="row"><span class="label">Subdivision</span><span class="value">${a.Subdivision}</span></div>` : ''}
+            <div class="row"><span class="label">T/R/S</span><span class="value">${[a.Township, a.Range, a.Section].filter(Boolean).join(' ') || 'N/A'}</span></div>
+          </div>
+        `;
+        document.getElementById('infopanel').style.display = 'block';
+      });
+    }
+  }).addTo(map);
+
+  document.getElementById('countText').textContent = `${features.length} parcels`;
+}
+
+// ── Load user location ──
+function locateUser() {
+  setStatus('Locating...', 'loading');
+  document.getElementById('btnLocate').disabled = true;
+
+  if (!navigator.geolocation) {
+    setStatus('Geolocation not supported by your browser', 'error');
+    document.getElementById('btnLocate').disabled = false;
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      currentLat = pos.coords.latitude;
+      currentLng = pos.coords.longitude;
+      placeUserMarker();
+      loadParcelsForLocation();
+    },
+    (err) => {
+      setStatus(`Location error: ${err.message}`, 'error');
+      document.getElementById('btnLocate').disabled = false;
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+function placeUserMarker() {
+  if (userMarker) map.removeLayer(userMarker);
+
+  // Pulse ring at user location
+  userMarker = L.circleMarker([currentLat, currentLng], {
+    radius: 8, color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.6, weight: 2
+  }).addTo(map);
+
+  map.setView([currentLat, currentLng], 15);
+  loadParcelsForLocation();
+}
+
+async function loadParcelsForLocation() {
+  if (currentLat == null) return;
+  setStatus('Loading parcels...', 'loading');
+  document.getElementById('btnLocate').disabled = true;
+
+  try {
+    const data = await fetchParcels(currentLat, currentLng, 200);
+    const features = data.features || [];
+    if (features.length === 0) {
+      setStatus('No parcels found in this area', '');
+    } else {
+      renderParcels(features);
+      setStatus(`Found ${features.length} parcels nearby`, '');
+    }
+  } catch (e) {
+    setStatus(`Error loading parcels: ${e.message}`, 'error');
+  }
+  document.getElementById('btnLocate').disabled = false;
+}
+
+// ── Drag map to search ──
+map.on('click', (e) => {
+  currentLat = e.latlng.lat;
+  currentLng = e.latlng.lng;
+  placeUserMarker();
+});
+
+// ── Init ──
+document.getElementById('btnLocate').addEventListener('click', locateUser);
+
+// ── Auto-detect location on load ──
+locateUser();
+</script>
+</body>
+</html>

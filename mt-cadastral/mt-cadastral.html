@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>MT Property Cadastral</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow:hidden}
+#map{width:100vw;height:100vh}
+#topbar{position:absolute;top:0;left:0;right:0;z-index:1000;display:flex;flex-direction:column;align-items:center;padding:8px;pointer-events:none}
+#topbar>*{pointer-events:auto}
+#topbar-row{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-radius:12px;padding:8px 14px;box-shadow:0 2px 12px rgba(0,0,0,.2);max-width:100%;flex-wrap:wrap;justify-content:center}
+#topbar-row button{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap}
+#topbar-row button:hover{background:#1d4ed8}
+#topbar-row button:disabled{background:#93c5fd;cursor:default}
+#topbar-row button.secondary{background:#64748b}
+#topbar-row button.secondary:hover{background:#475569}
+#topbar-row button.danger{background:#dc2626}
+#topbar-row button.danger:hover{background:#b91c1c}
+#status{font-size:12px;color:#555;padding:4px 10px;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);border-radius:20px;margin-top:6px;white-space:nowrap;max-width:95vw;overflow:hidden;text-overflow:ellipsis}
+#status.loading{color:#d97706}
+#status.error{color:#dc2626}
+#status.offline{color:#059669}
+#controls{position:absolute;top:80px;left:50%;transform:translateX(-50%);z-index:1000;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-radius:12px;padding:8px 14px;box-shadow:0 2px 12px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap;justify-content:center;max-width:95vw}
+#controls label{color:#555;white-space:nowrap}
+#controls input[type=range]{width:100px;accent-color:#2563eb}
+#controls select{padding:4px 8px;border:1px solid #ccc;border-radius:6px;font-size:13px}
+#controls .val{font-weight:600;min-width:45px;color:#1e293b}
+#controls .spacer{width:1px;height:24px;background:#e2e8f0;margin:0 4px}
+#infopanel{position:absolute;bottom:0;left:0;right:0;z-index:1000;background:#fff;border-radius:16px 16px 0 0;padding:0;box-shadow:0 -2px 20px rgba(0,0,0,.2);max-height:65vh;overflow-y:auto;transform:translateY(100%);transition:transform .3s ease}
+#infopanel.open{transform:translateY(0)}
+#infopanel .drag-handle{width:100%;height:32px;display:flex;align-items:center;justify-content:center;cursor:grab}
+#infopanel .drag-handle::after{content:'';width:36px;height:4px;border-radius:2px;background:#cbd5e1}
+#infopanel .header{padding:12px 16px;background:#1e293b;color:#fff;border-radius:16px 16px 0 0;font-weight:700;font-size:16px;display:flex;justify-content:space-between;align-items:center}
+#infopanel .header .close{background:none;border:none;color:#fff;font-size:24px;cursor:pointer;padding:0 4px;line-height:1;opacity:.7}
+#infopanel .header .close:hover{opacity:1}
+#infopanel .body{padding:12px 16px;font-size:13px;line-height:1.7}
+#infopanel .body .row{display:flex}
+#infopanel .body .label{font-weight:600;color:#475569;min-width:110px;flex-shrink:0}
+#infopanel .body .value{color:#1e293b;word-break:break-word}
+#infopanel .body .value.muted{color:#94a3b8;font-style:italic}
+#infopanel .body .section{border-top:1px solid #e2e8f0;margin-top:10px;padding-top:10px}
+#parcel-count{position:absolute;bottom:20px;right:10px;z-index:1000;background:#1e293b;color:#fff;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+#cache-panel{position:absolute;top:130px;right:10px;z-index:1000;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-radius:12px;padding:12px;box-shadow:0 2px 12px rgba(0,0,0,.2);width:240px;font-size:13px;max-height:60vh;overflow-y:auto}
+#cache-panel h3{font-size:14px;margin-bottom:8px;color:#1e293b}
+#cache-panel .item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #e2e8f0;font-size:12px}
+#cache-panel .item:last-child{border-bottom:none}
+#cache-panel .item-name{flex:1;font-weight:500;color:#334155}
+#cache-panel .item-size{color:#64748b;font-size:11px}
+#cache-panel .btn-sm{background:#64748b;color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer}
+#cache-panel .btn-sm:hover{background:#475569}
+#cache-progress{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2000;background:rgba(255,255,255,.97);border-radius:16px;padding:24px 32px;box-shadow:0 4px 24px rgba(0,0,0,.3);text-align:center;min-width:280px}
+#cache-progress .title{font-size:16px;font-weight:700;color:#1e293b;margin-bottom:12px}
+#cache-progress .bar-bg{background:#e2e8f0;border-radius:8px;height:8px;overflow:hidden;margin:8px 0}
+#cache-progress .bar{background:#2563eb;height:100%;border-radius:8px;width:0%;transition:width .3s}
+#cache-progress .detail{font-size:12px;color:#64748b;margin-top:4px}
+#offline-banner{display:none;position:absolute;top:70px;left:50%;transform:translateX(-50%);z-index:1000;background:#f59e0b;color:#000;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.leaflet-popup-content-wrapper{border-radius:8px;font-size:13px}
+.leaflet-popup-content{margin:8px 12px}
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="topbar">
+  <div id="topbar-row">
+    <button id="btnLocate" title="Use my current location">📍 My Location</button>
+    <button id="btnCache" class="secondary" title="Cache tiles and parcels for current area" disabled>💾 Cache Area</button>
+    <button id="btnClearCache" class="danger" title="Remove cached data">🗑️ Clear Cache</button>
+  </div>
+  <div id="status">Tap "My Location" or click the map to find nearby properties</div>
+</div>
+
+<div id="offline-banner">📡 Offline Mode — using cached data</div>
+
+<div id="controls">
+  <label>Radius:</label>
+  <input type="range" id="radiusSlider" min="50" max="2000" value="200" step="10">
+  <span class="val" id="radiusVal">200 m</span>
+  <div class="spacer"></div>
+  <label>Zoom:</label>
+  <select id="cacheZoom">
+    <option value="13,14,15,16" selected>13-16 (full)</option>
+    <option value="14,15,16">14-16 (recommended)</option>
+    <option value="15,16">15-16 (fine detail)</option>
+    <option value="16">16 only</option>
+  </select>
+</div>
+
+<div id="cache-panel" style="display:none">
+  <h3>💾 Cached Areas</h3>
+  <div id="cacheList"><em style="color:#94a3b8;font-size:12px">No cached areas</em></div>
+</div>
+
+<div id="parcel-count"><span id="countText">0 parcels</span></div>
+
+<div id="infopanel">
+  <div class="drag-handle"></div>
+  <div class="header">
+    <span id="panelTitle">Property Details</span>
+    <button class="close" onclick="closePanel()">&times;</button>
+  </div>
+  <div class="body" id="panelBody"></div>
+</div>
+
+<div id="cache-progress">
+  <div class="title" id="cacheTitle">Caching area...</div>
+  <div class="bar-bg"><div class="bar" id="cacheBar"></div></div>
+  <div class="detail" id="cacheDetail"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// IndexedDB Helper
+// ═══════════════════════════════════════════
+const DB_NAME = 'mt-cadastral-db';
+const DB_VERSION = 2;
+
+function dbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('tiles'))
+        db.createObjectStore('tiles', { keyPath: 'key' });
+      if (!db.objectStoreNames.contains('parcels')) {
+        const os = db.createObjectStore('parcels', { keyPath: 'key' });
+        os.createIndex('bbox', ['bbox'], { unique: false });
+      }
+      if (!db.objectStoreNames.contains('manifest'))
+        db.createObjectStore('manifest', { keyPath: 'key' });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbGet(store, key) {
+  return dbOpen().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  }));
+}
+
+function dbPut(store, key, value) {
+  return dbOpen().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readwrite');
+    tx.objectStore(store).put({ key, value });
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  }));
+}
+
+function dbDelete(store, key) {
+  return dbOpen().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readwrite');
+    tx.objectStore(store).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  }));
+}
+
+function dbClear(store) {
+  return dbOpen().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readwrite');
+    tx.objectStore(store).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  }));
+}
+
+function dbCount(store) {
+  return dbOpen().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).count();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  }));
+}
+
+function dbGetAll(store) {
+  return dbOpen().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).getAll();
+    req.onsuccess = () => resolve(req.result.map(r => r.value));
+    req.onerror = () => reject(req.error);
+  }));
+}
+
+// ═══════════════════════════════════════════
+// Tile Layer with IndexedDB cache
+// ═══════════════════════════════════════════
+class CachedTileLayer extends L.TileLayer {
+  _cacheStore = 'tiles';
+
+  createTile(coords, done) {
+    const tile = document.createElement('img');
+    tile.crossOrigin = 'anonymous';
+    const key = `${coords.z}/${coords.x}/${coords.y}`;
+
+    dbGet(this._cacheStore, key).then(blob => {
+      if (blob) {
+        tile.src = URL.createObjectURL(blob);
+        tile.onload = () => done(null, tile);
+        tile.onerror = () => { URL.revokeObjectURL(tile.src); this._fetchTile(coords, tile, done); };
+      } else {
+        this._fetchTile(coords, tile, done);
+      }
+    });
+    return tile;
+  }
+
+  _fetchTile(coords, tile, done) {
+    // Use Leaflet's _getTileUrl which handles {s}, {z}, {x}, {y} substitution
+    const url = this._getTileUrl(coords);
+
+    fetch(url).then(r => {
+      if (!r.ok) throw new Error('Tile fetch failed');
+      return r.blob();
+    }).then(blob => {
+      const key = `${coords.z}/${coords.x}/${coords.y}`;
+      dbPut(this._cacheStore, key, blob).catch(() => {});
+      tile.src = URL.createObjectURL(blob);
+      tile.onload = () => done(null, tile);
+      tile.onerror = () => { URL.revokeObjectURL(tile.src); done(new Error('Tile load failed'), tile); };
+    }).catch(() => {
+      tile.classList.add('leaflet-tile-loaded');
+      done(null, tile);
+    });
+  }
+}
+
+// ═══════════════════════════════════════════
+// Map Setup
+// ═══════════════════════════════════════════
+const map = L.map('map', {
+  zoomControl: false,
+  minZoom: 3,
+  maxZoom: 19
+}).setView([46.8721, -110.3626], 7);
+
+L.control.zoom({ position: 'topright' }).addTo(map);
+
+const tileLayer = new CachedTileLayer(
+  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  { maxZoom: 19 }
+).addTo(map);
+
+// ═══════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════
+let userMarker = null;
+let parcelLayer = null;
+let cacheCircle = null;
+let currentLat = null;
+let currentLng = null;
+let cachedAreaKey = null;
+
+const API = 'https://gisservice.mt.gov/ArcGIS/rest/services/msdi_cadastral_map_v1/MapServer/1/query';
+
+// ═══════════════════════════════════════════
+// Radius / Zoom controls
+// ═══════════════════════════════════════════
+const slider = document.getElementById('radiusSlider');
+const radiusValEl = document.getElementById('radiusVal');
+
+slider.addEventListener('input', () => {
+  const val = parseFloat(slider.value);
+  radiusValEl.textContent = `${val} m`;
+  if (currentLat != null) updateCacheCircle();
+});
+
+function getDistanceMeters() { return parseFloat(slider.value); }
+
+function getRadiusParams() {
+  const val = parseFloat(slider.value);
+  const unit = 'esriSRUnit_Meter';
+  return { distance: val, units: unit };
+}
+
+// ═══════════════════════════════════════════
+// Status helper
+// ═══════════════════════════════════════════
+function setStatus(msg, type = '') {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status' + (type ? ' ' + type : '');
+}
+
+// ═══════════════════════════════════════════
+// Utility
+// ═══════════════════════════════════════════
+function fmt(n) {
+  if (n == null || n === '') return '<span class="muted">N/A</span>';
+  return '$' + Number(n).toLocaleString();
+}
+
+function closePanel() {
+  document.getElementById('infopanel').classList.remove('open');
+}
+
+function openPanel(title, html) {
+  document.getElementById('panelTitle').textContent = title;
+  document.getElementById('panelBody').innerHTML = html;
+  document.getElementById('infopanel').classList.add('open');
+}
+
+// ═══════════════════════════════════════════
+// Geometric helpers
+// ═══════════════════════════════════════════
+function metersToDelta(lat, meters) {
+  const R = 6378137;
+  const dLat = meters / R;
+  const dLng = meters / (R * Math.cos(lat * Math.PI / 180));
+  return { dLat, dLng };
+}
+
+function bboxFromCenter(lat, lng, radius) {
+  const { dLat, dLng } = metersToDelta(lat, radius);
+  return {
+    west: lng - dLng,
+    east: lng + dLng,
+    south: lat - dLat,
+    north: lat + dLat
+  };
+}
+
+function tileRangeFromBbox(west, south, east, north, zoom) {
+  const n = Math.pow(2, zoom);
+  const toX = (lon) => Math.floor(((lon + 180) / 360) * n);
+  const toY = (lat) => {
+    const latRad = lat * Math.PI / 180;
+    return Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
+  };
+  return {
+    xMin: Math.max(0, toX(west)),
+    xMax: Math.min(n - 1, toX(east)),
+    yMin: Math.max(0, toY(north)),
+    yMax: Math.min(n - 1, toY(south))
+  };
+}
+
+function getAreaKey(lat, lng, radius) {
+  return `a${lat.toFixed(3)}l${lng.toFixed(3)}r${Math.round(radius)}`;
+}
+
+// ═══════════════════════════════════════════
+// Update cache circle on map
+// ═══════════════════════════════════════════
+function updateCacheCircle() {
+  if (currentLat == null) return;
+  const r = getDistanceMeters();
+  if (cacheCircle) map.removeLayer(cacheCircle);
+  cacheCircle = L.circle([currentLat, currentLng], {
+    radius: r, color: '#8b5cf6', fillColor: '#8b5cf6',
+    fillOpacity: 0.1, weight: 2, dashArray: '6,6'
+  }).addTo(map);
+}
+
+// ═══════════════════════════════════════════
+// Fetch parcels (online)
+// ═══════════════════════════════════════════
+async function fetchParcelsOnline(lat, lng) {
+  const { distance, units } = getRadiusParams();
+  const params = new URLSearchParams({
+    where: '1=1',
+    outFields: 'PARCELID,OwnerName,CountyName,TaxYear,TotalValue,TotalLandValue,TotalBuildingValue,TotalAcres,AddressLine1,AddressLine2,CityStateZip,PropType,OwnerAddress1,OwnerAddress2,OwnerCity,OwnerState,OwnerZipCode,AssessmentCode,Township,Range,Section,LegalDescriptionShort,Subdivision',
+    geometry: `${lng},${lat}`,
+    geometryType: 'esriGeometryPoint',
+    inSR: '4326',
+    outSR: '4326',
+    distance: distance,
+    units: units,
+    relationOp: 'esriSpatialRelIntersects',
+    f: 'json',
+    returnGeometry: 'true',
+    resultRecordCount: 2000,
+  });
+
+  const resp = await fetch(`${API}?${params}`);
+  const data = await resp.json();
+  return data.features || [];
+}
+
+// ═══════════════════════════════════════════
+// Fetch parcels (online, by bounding box)
+// ═══════════════════════════════════════════
+async function fetchParcelsByBbox(west, south, east, north) {
+  const params = new URLSearchParams({
+    where: '1=1',
+    outFields: 'PARCELID,OwnerName,CountyName,TaxYear,TotalValue,TotalLandValue,TotalBuildingValue,TotalAcres,AddressLine1,AddressLine2,CityStateZip,PropType,OwnerAddress1,OwnerAddress2,OwnerCity,OwnerState,OwnerZipCode,AssessmentCode,Township,Range,Section,LegalDescriptionShort,Subdivision',
+    geometry: `${west},${south},${east},${north}`,
+    geometryType: 'esriGeometryEnvelope',
+    inSR: '4326',
+    outSR: '4326',
+    relationOp: 'esriSpatialRelIntersects',
+    f: 'json',
+    returnGeometry: 'true',
+    resultRecordCount: 2000,
+  });
+
+  const resp = await fetch(`${API}?${params}`);
+  const data = await resp.json();
+  return data.features || [];
+}
+
+// ═══════════════════════════════════════════
+// Convert ArcGIS geometry to GeoJSON
+// ═══════════════════════════════════════════
+function toGeoJSONGeom(geom) {
+  if (!geom) return null;
+  if (geom.type) return geom;
+  if (geom.rings) return { type: 'Polygon', coordinates: geom.rings };
+  if (geom.polygons) return { type: 'MultiPolygon', coordinates: geom.polygons.map(p => p.rings || [p.rings]) };
+  if (geom.points) return { type: 'Point', coordinates: geom.points };
+  return geom;
+}
+
+// ═══════════════════════════════════════════
+// Render parcels on map
+// ═══════════════════════════════════════════
+function renderParcels(features) {
+  if (parcelLayer) map.removeLayer(parcelLayer);
+  if (!features.length) {
+    document.getElementById('countText').textContent = '0 parcels';
+    return;
+  }
+
+  const geojsonFeatures = features.map(f => ({
+    type: 'Feature',
+    geometry: toGeoJSONGeom(f.geometry),
+    properties: f.attributes
+  }));
+
+  parcelLayer = L.geoJSON(geojsonFeatures, {
+    style: () => ({
+      color: '#3b82f6', weight: 1.5, opacity: 0.8,
+      fillColor: '#93c5fd', fillOpacity: 0.25,
+    }),
+    onEachFeature: (feature, layer) => {
+      const a = feature.properties;
+      const owner = a.OwnerName || 'Unknown Owner';
+      const address = [a.AddressLine1, a.AddressLine2, a.CityStateZip].filter(Boolean).join(', ');
+
+      layer.bindPopup(`<strong>${owner}</strong><br><em>${address || 'No street address'}</em><br><span style="color:#64748b">Value: ${fmt(a.TotalValue)}</span>`);
+
+      layer.on('click', () => showParcelPanel(a, owner));
+    }
+  }).addTo(map);
+
+  document.getElementById('countText').textContent = `${features.length} parcels`;
+}
+
+function showParcelPanel(a, owner) {
+  const ownerAddr = [a.OwnerAddress1, a.OwnerAddress2, (a.OwnerCity ? a.OwnerCity + ' ' : '') + (a.OwnerState || ''), a.OwnerZipCode].filter(Boolean).join(', ');
+  const address = [a.AddressLine1, a.AddressLine2, a.CityStateZip].filter(Boolean).join(', ');
+  const legal = [a.Township, a.Range, a.Section].filter(Boolean).join(' ');
+
+  openPanel(owner, `
+    <div class="section">
+      <div class="row"><span class="label">Owner</span><span class="value">${owner}</span></div>
+      ${ownerAddr ? `<div class="row"><span class="label">Mailing Addr</span><span class="value">${ownerAddr}</span></div>` : ''}
+      ${a.DbaName ? `<div class="row"><span class="label">DBA</span><span class="value">${a.DbaName}</span></div>` : ''}
+      ${address ? `<div class="row"><span class="label">Property</span><span class="value">${address}</span></div>` : ''}
+    </div>
+    <div class="section">
+      <div class="row"><span class="label">Total Value</span><span class="value">${fmt(a.TotalValue)}</span></div>
+      <div class="row"><span class="label">Land Value</span><span class="value">${fmt(a.TotalLandValue)}</span></div>
+      <div class="row"><span class="label">Bldg Value</span><span class="value">${fmt(a.TotalBuildingValue)}</span></div>
+      <div class="row"><span class="label">Acres</span><span class="value">${a.TotalAcres != null ? Number(a.TotalAcres).toFixed(3) : 'N/A'}</span></div>
+      <div class="row"><span class="label">Tax Year</span><span class="value">${a.TaxYear || 'N/A'}</span></div>
+    </div>
+    <div class="section">
+      <div class="row"><span class="label">County</span><span class="value">${a.CountyName || 'N/A'}</span></div>
+      <div class="row"><span class="label">Type</span><span class="value">${a.PropType || 'N/A'}</span></div>
+      <div class="row"><span class="label">Geocode</span><span class="value" style="font-family:monospace;font-size:11px">${a.PARCELID || 'N/A'}</span></div>
+      ${legal ? `<div class="row"><span class="label">T/R/S</span><span class="value">${legal}</span></div>` : ''}
+      ${a.LegalDescriptionShort ? `<div class="row"><span class="label">Legal Desc</span><span class="value">${a.LegalDescriptionShort}</span></div>` : ''}
+      ${a.Subdivision ? `<div class="row"><span class="label">Subdivision</span><span class="value">${a.Subdivision}</span></div>` : ''}
+    </div>
+  `);
+}
+
+// ═══════════════════════════════════════════
+// Load parcels (online or offline)
+// ═══════════════════════════════════════════
+async function loadParcelsForLocation() {
+  if (currentLat == null) return;
+
+  // Check offline mode
+  const isOffline = !navigator.onLine;
+  document.getElementById('offline-banner').style.display = isOffline ? 'block' : 'none';
+
+  // Try online first (if available)
+  try {
+    const features = await fetchParcelsOnline(currentLat, currentLng);
+    renderParcels(features);
+    setStatus(`Found ${features.length} parcels nearby`, '');
+    return;
+  } catch (e) {
+    // Online failed, try offline
+  }
+
+  // Offline: check cached data
+  if (cachedAreaKey) {
+    try {
+      const cached = await dbGet('parcels', cachedAreaKey);
+      if (cached && cached.features) {
+        renderParcels(cached.features);
+        setStatus(`${cached.features.length} parcels from cache`, 'offline');
+        return;
+      }
+    } catch (e) {}
+  }
+
+  setStatus('No data available — cache an area first', 'error');
+}
+
+// ═══════════════════════════════════════════
+// Locate user
+// ═══════════════════════════════════════════
+function locateUser() {
+  setStatus('Locating...', 'loading');
+  document.getElementById('btnLocate').disabled = true;
+
+  if (!navigator.geolocation) {
+    setStatus('Geolocation not supported', 'error');
+    document.getElementById('btnLocate').disabled = false;
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      currentLat = pos.coords.latitude;
+      currentLng = pos.coords.longitude;
+      cachedAreaKey = null;
+      placeUserMarker();
+    },
+    (err) => {
+      setStatus(`Location error: ${err.message}`, 'error');
+      document.getElementById('btnLocate').disabled = false;
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+function placeUserMarker() {
+  if (userMarker) map.removeLayer(userMarker);
+  userMarker = L.circleMarker([currentLat, currentLng], {
+    radius: 8, color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.6, weight: 2
+  }).addTo(map);
+
+  updateCacheCircle();
+  map.setView([currentLat, currentLng], 15);
+  loadParcelsForLocation();
+  document.getElementById('btnCache').disabled = false;
+}
+
+// ═══════════════════════════════════════════
+// Cache an area (tiles + parcels)
+// ═══════════════════════════════════════════
+async function cacheArea() {
+  if (currentLat == null) return;
+
+  const radius = getDistanceMeters();
+  const bbox = bboxFromCenter(currentLat, currentLng, radius);
+  const zooms = document.getElementById('cacheZoom').value.split(',').map(Number);
+  const areaKey = getAreaKey(currentLat, currentLng, radius);
+  cachedAreaKey = areaKey;
+
+  const progress = document.getElementById('cache-progress');
+  const title = document.getElementById('cacheTitle');
+  const bar = document.getElementById('cacheBar');
+  const detail = document.getElementById('cacheDetail');
+
+  progress.style.display = 'block';
+  title.textContent = 'Caching area...';
+  bar.style.width = '0%';
+
+  try {
+    // Step 1: Cache tiles
+    let totalTiles = 0;
+    let cachedTiles = 0;
+    for (const z of zooms) {
+      const tr = tileRangeFromBbox(bbox.west, bbox.south, bbox.east, bbox.north, z);
+      totalTiles += (tr.xMax - tr.xMin + 1) * (tr.yMax - tr.yMin + 1);
+    }
+    let tilesSoFar = 0;
+
+    title.textContent = `Downloading ${totalTiles} tiles...`;
+    detail.textContent = 'Fetching map tiles';
+
+    for (const z of zooms) {
+      const tr = tileRangeFromBbox(bbox.west, bbox.south, bbox.east, bbox.north, z);
+      for (let x = tr.xMin; x <= tr.xMax; x++) {
+        for (let y = tr.yMin; y <= tr.yMax; y++) {
+          const key = `${z}/${x}/${y}`;
+          const existing = await dbGet('tiles', key);
+          if (!existing) {
+            try {
+              const url = `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+              const resp = await fetch(url);
+              if (resp.ok) {
+                const blob = await resp.blob();
+                await dbPut('tiles', key, blob);
+              }
+            } catch (e) {
+              // Skip failed tiles
+            }
+          }
+          cachedTiles++;
+          tilesSoFar++;
+          const pct = Math.round((tilesSoFar / totalTiles) * 70);
+          bar.style.width = pct + '%';
+          detail.textContent = `${cachedTiles}/${totalTiles} tiles cached (${z})`;
+          // Yield to keep UI responsive
+          if (tilesSoFar % 20 === 0) await new Promise(r => setTimeout(r, 0));
+        }
+      }
+    }
+
+    // Step 2: Cache parcel data
+    title.textContent = 'Downloading parcel data...';
+    bar.style.width = '75%';
+    detail.textContent = 'Querying property records';
+
+    const parcels = await fetchParcelsByBbox(bbox.west, bbox.south, bbox.east, bbox.north);
+    await dbPut('parcels', areaKey, {
+      key: areaKey,
+      lat: currentLat,
+      lng: currentLng,
+      radius: radius,
+      bbox: [bbox.west, bbox.south, bbox.east, bbox.north],
+      features: parcels,
+      cachedAt: Date.now()
+    });
+
+    // Step 3: Update manifest
+    await dbPut('manifest', areaKey, {
+      key: areaKey,
+      lat: currentLat,
+      lng: currentLng,
+      radius: radius,
+      tileCount: totalTiles,
+      parcelCount: parcels.length,
+      cachedAt: Date.now()
+    });
+
+    bar.style.width = '100%';
+    title.textContent = `Cached ${totalTiles} tiles + ${parcels.length} parcels`;
+    detail.textContent = 'Area cached successfully ✓';
+
+    // Reload with cached data
+    renderParcels(parcels);
+    setStatus(`Cached area: ${totalTiles} tiles, ${parcels.length} parcels`, '');
+    await refreshCacheList();
+
+  } catch (e) {
+    title.textContent = 'Cache failed';
+    detail.textContent = e.message;
+    setStatus(`Cache error: ${e.message}`, 'error');
+  }
+
+  setTimeout(() => { progress.style.display = 'none'; }, 3000);
+}
+
+// ═══════════════════════════════════════════
+// Cache list management
+// ═══════════════════════════════════════════
+async function refreshCacheList() {
+  const listEl = document.getElementById('cacheList');
+  let manifest;
+  try { manifest = await dbGetAll('manifest'); } catch { manifest = []; }
+
+  if (!manifest.length) {
+    listEl.innerHTML = '<em style="color:#94a3b8;font-size:12px">No cached areas</em>';
+    return;
+  }
+
+  listEl.innerHTML = manifest.map(m => {
+    const date = new Date(m.cachedAt).toLocaleDateString();
+    return `<div class="item">
+      <span class="item-name">${m.lat.toFixed(2)}°, ${m.lng.toFixed(2)}°<br><span style="color:#94a3b8;font-size:10px">${m.parcelCount} parcels · ${date}</span></span>
+      <button class="btn-sm" onclick="loadCachedArea('${m.key}')">Load</button>
+      <button class="btn-sm" onclick="deleteArea('${m.key}')" style="margin-left:4px;background:#dc2626">✕</button>
+    </div>`;
+  }).join('');
+}
+
+async function loadCachedArea(key) {
+  try {
+    const data = await dbGet('parcels', key);
+    if (data && data.features) {
+      currentLat = data.lat;
+      currentLng = data.lng;
+      cachedAreaKey = key;
+      placeUserMarker();
+      slider.value = data.radius;
+      radiusValEl.textContent = `${data.radius} m`;
+      updateCacheCircle();
+      document.getElementById('btnCache').disabled = false;
+      renderParcels(data.features);
+      setStatus(`Loaded cached area: ${data.features.length} parcels`, '');
+    }
+  } catch (e) {
+    setStatus(`Error loading area: ${e.message}`, 'error');
+  }
+}
+
+async function deleteArea(key) {
+  await dbDelete('parcels', key);
+  await dbDelete('manifest', key);
+  if (cachedAreaKey === key) cachedAreaKey = null;
+  await refreshCacheList();
+  refreshCacheSize();
+}
+
+async function clearAllCache() {
+  await dbClear('tiles');
+  await dbClear('parcels');
+  await dbClear('manifest');
+  cachedAreaKey = null;
+  await refreshCacheList();
+  refreshCacheSize();
+  setStatus('Cache cleared', '');
+}
+
+async function refreshCacheSize() {
+  let tileCount, parcelCount;
+  try {
+    [tileCount, parcelCount] = await Promise.all([dbCount('tiles'), dbCount('parcels')]);
+  } catch { return; }
+  if (tileCount > 0 || parcelCount > 0) {
+    document.getElementById('cache-panel').style.display = 'block';
+    await refreshCacheList();
+  }
+}
+
+// ═══════════════════════════════════════════
+// Drag-to-scroll panel (mobile)
+// ═══════════════════════════════════════════
+(function() {
+  const panel = document.getElementById('infopanel');
+  const handle = panel.querySelector('.drag-handle');
+  let startY, startTranslateY = 0;
+  let dragging = false;
+
+  handle.addEventListener('touchstart', (e) => {
+    if (!panel.classList.contains('open')) return;
+    dragging = true;
+    startY = e.touches[0].clientY;
+    const rect = panel.getBoundingClientRect();
+    startTranslateY = rect.bottom - window.innerHeight;
+    panel.style.transition = 'none';
+  });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!dragging) return;
+    const y = e.touches[0].clientY;
+    const dy = startY - y;
+    const newBottom = Math.max(0, startTranslateY + dy);
+    panel.style.transform = `translateY(${window.innerHeight - newBottom}px)`;
+  });
+
+  document.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    panel.style.transition = 'transform .3s ease';
+    const rect = panel.getBoundingClientRect();
+    const visible = rect.height < window.innerHeight * 0.6;
+    panel.classList.toggle('open', !visible);
+    panel.style.transform = '';
+  });
+})();
+
+// ═══════════════════════════════════════════
+// Events
+// ═══════════════════════════════════════════
+document.getElementById('btnLocate').addEventListener('click', locateUser);
+document.getElementById('btnCache').addEventListener('click', cacheArea);
+document.getElementById('btnClearCache').addEventListener('click', () => {
+  if (confirm('Clear all cached tiles and parcel data?')) clearAllCache();
+});
+
+// Click map to set location
+map.on('click', (e) => {
+  currentLat = e.latlng.lat;
+  currentLng = e.latlng.lng;
+  cachedAreaKey = null;
+  placeUserMarker();
+});
+
+// Show cache panel
+map.on('moveend', () => {
+  refreshCacheSize();
+});
+
+// ═══════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════
+(async () => {
+  await dbOpen();
+  await refreshCacheSize();
+
+  // Auto-detect location
+  locateUser();
+
+  // Register Service Worker
+  if ('serviceWorker' in navigator) {
+    try {
+      await navigator.serviceWorker.register('sw.js');
+      console.log('Service Worker registered');
+    } catch (e) {
+      console.log('SW registration failed:', e);
+    }
+  }
+})();
+</script>
+</body>
+</html>

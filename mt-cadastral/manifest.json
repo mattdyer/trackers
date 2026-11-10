@@ -1,0 +1,15 @@
+{
+  "name": "MT Property Cadastral",
+  "short_name": "MT Property",
+  "start_url": "/mt-cadastral.html",
+  "display": "standalone",
+  "background_color": "#f0f4f8",
+  "theme_color": "#1e293b",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

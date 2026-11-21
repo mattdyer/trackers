@@ -75,9 +75,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;o
     <button id="btnLocate" title="Use my current location">📍 My Location</button>
     <button id="btnRecenter" class="secondary" title="Re-center map to your location" disabled>🔄 Re-center</button>
     <button id="btnCache" class="secondary" title="Cache tiles and parcels for current area" disabled>💾 Cache Area</button>
+    <button id="btnDistricts" class="secondary" title="Show hunting district boundaries">🦌 Districts</button>
     <button id="btnClearCache" class="danger" title="Remove cached data">🗑️ Clear Cache</button>
   </div>
-  <div id="status">Tap "My Location" or click the map to find nearby properties</div>
+  <div id="status">Tap "My Location" or click the map to find nearby properties. Enable 🦌 Districts to see hunting boundaries.</div>
 </div>
 
 <div id="offline-banner">📡 Offline Mode — using cached data</div>
@@ -243,6 +244,22 @@ let queryLng = null;
 let cachedAreaKey = null;
 
 const API = 'https://gisservice.mt.gov/ArcGIS/rest/services/msdi_cadastral_map_v1/MapServer/1/query';
+const DISTRICT_API = 'https://services3.arcgis.com/Cdxz8r11hT0MGzg1/arcgis/rest/services/ADMBND_HD_DEERELKLION/FeatureServer/0/query';
+
+// Region colors for hunting districts
+const REGION_COLORS = {
+  1: '#e74c3c',  // Region 1 - Red
+  2: '#e67e22',  // Region 2 - Orange
+  3: '#f1c40f',  // Region 3 - Yellow
+  4: '#2ecc71',  // Region 4 - Green
+  5: '#3498db',  // Region 5 - Blue
+  6: '#9b59b6',  // Region 6 - Purple
+  7: '#1abc9c',  // Region 7 - Teal
+};
+
+let districtLayer = null;
+let districtsEnabled = false;
+let highlightedDistrict = null;  // currently highlighted district GeoJSON layer
 
 // ═══════════════════════════════════════════
 // Radius — auto-set by zoom level, max 2000m
@@ -474,6 +491,202 @@ function showParcelPanel(a, owner) {
 }
 
 // ═══════════════════════════════════════════
+// Hunting Districts
+// ═══════════════════════════════════════════
+async function fetchDistricts() {
+  const params = new URLSearchParams({
+    where: '1=1',
+    outFields: 'REG,DISTRICT,NAME,EMU_NAME,HARVTYPE,AREA_AC,AREA_KM,AREA_MI,MAPLINK,DEERWEBPAGE,ELKWEBPAGE',
+    f: 'json',
+    returnGeometry: 'true',
+    resultRecordCount: 200,
+  });
+
+  const resp = await fetch(`${DISTRICT_API}?${params}`);
+  const data = await resp.json();
+  return data.features || [];
+}
+
+function districtColor(reg) {
+  return REGION_COLORS[reg] || '#888888';
+}
+
+function districtStyle(feature) {
+  const reg = feature.attributes.REG;
+  const color = districtColor(reg);
+  return {
+    color: color,
+    weight: 1.5,
+    opacity: 0.8,
+    fillColor: color,
+    fillOpacity: 0.15,
+  };
+}
+
+function highlightStyle(feature) {
+  const reg = feature.attributes.REG;
+  const color = districtColor(reg);
+  return {
+    color: color,
+    weight: 3,
+    opacity: 1,
+    fillColor: color,
+    fillOpacity: 0.4,
+  };
+}
+
+function formatArea(acres) {
+  if (acres == null) return 'N/A';
+  const a = Number(acres);
+  if (a >= 1000000) return (a / 1000000).toFixed(2) + 'M ac';
+  if (a >= 1000) return (a / 1000).toFixed(1) + 'K ac';
+  return a.toFixed(0) + ' ac';
+}
+
+function showDistrictPanel(a, feature) {
+  const distNum = a.DISTRICT ? `#${a.DISTRICT}` : '—';
+  const areas = [
+    a.AREA_AC != null ? `${formatArea(a.AREA_AC)} ac` : '',
+    a.AREA_KM != null ? `${Number(a.AREA_KM).toFixed(1)} km²` : '',
+    a.AREA_MI != null ? `${Number(a.AREA_MI).toFixed(1)} mi²` : '',
+  ].filter(Boolean).join('  ·  ');
+
+  let links = '';
+  if (a.MAPLINK) {
+    links += `<a href="${a.MAPLINK}" target="_blank" rel="noopener">📄 District Map</a>`;
+  }
+  if (a.DEERWEBPAGE) {
+    links += links ? '  ·  ' : '';
+    links += `<a href="${a.DEERWEBPAGE}" target="_blank" rel="noopener">🦌 Deer Info</a>`;
+  }
+  if (a.ELKWEBPAGE) {
+    links += links ? '  ·  ' : '';
+    links += `<a href="${a.ELKWEBPAGE}" target="_blank" rel="noopener">🦌 Elk Info</a>`;
+  }
+
+  openPanel(`${a.NAME || 'Hunting District'}`, `
+    <div class="section">
+      <div class="row"><span class="label">District</span><span class="value">${distNum}</span></div>
+      <div class="row"><span class="label">Name</span><span class="value">${a.NAME || '—'}</span></div>
+      <div class="row"><span class="label">Region</span><span class="value">${a.REG != null ? 'Region ' + a.REG : '—'}</span></div>
+      <div class="row"><span class="label">Harvest Type</span><span class="value">${a.HARVTYPE || '—'}</span></div>
+      ${a.EMU_NAME ? `<div class="row"><span class="label">EMU</span><span class="value">${a.EMU_NAME}</span></div>` : ''}
+      ${areas ? `<div class="row"><span class="label">Area</span><span class="value">${areas}</span></div>` : ''}
+    </div>
+    ${links ? `<div class="section" style="text-align:center"><span style="font-size:14px">${links}</span></div>` : ''}
+  `);
+}
+
+function toggleDistricts() {
+  if (districtsEnabled) {
+    // Turn off
+    if (districtLayer) {
+      map.removeLayer(districtLayer);
+      districtLayer = null;
+    }
+    if (highlightedDistrict) {
+      map.removeLayer(highlightedDistrict);
+      highlightedDistrict = null;
+    }
+    districtsEnabled = false;
+    document.getElementById('btnDistricts').classList.add('secondary');
+    document.getElementById('btnDistricts').style.background = '';
+    setStatus('Hunting districts hidden', '');
+    return;
+  }
+
+  setStatus('Loading hunting districts...', 'loading');
+  document.getElementById('btnDistricts').disabled = true;
+
+  fetchDistricts().then(features => {
+    const geojson = features.map(f => ({
+      type: 'Feature',
+      geometry: toGeoJSONGeom(f.geometry),
+      properties: f.attributes
+    }));
+
+    if (districtLayer) map.removeLayer(districtLayer);
+
+    districtLayer = L.geoJSON(geojson, {
+      style: districtStyle,
+      onEachFeature: (feature, layer) => {
+        layer.on('click', () => {
+          if (highlightedDistrict) map.removeLayer(highlightedDistrict);
+          highlightedDistrict = L.geoJSON(feature, {
+            style: highlightStyle(feature)
+          }).addTo(map);
+          showDistrictPanel(feature.attributes, feature);
+        });
+        layer.on('mouseover', (e) => {
+          if (!highlightedDistrict) {
+            e.target.setStyle({ fillOpacity: 0.3 });
+          }
+        });
+        layer.on('mouseout', (e) => {
+          if (!highlightedDistrict) {
+            districtLayer.resetStyle(e.target);
+          }
+        });
+      }
+    }).addTo(map);
+
+    districtsEnabled = true;
+    document.getElementById('btnDistricts').style.background = '#d97706';
+    setStatus(`Loaded ${features.length} hunting districts`, '');
+    document.getElementById('btnDistricts').disabled = false;
+
+    // Highlight district at current query location if active
+    if (queryLat != null) {
+      highlightDistrictAt(queryLat, queryLng);
+    }
+  }).catch(e => {
+    setStatus(`Failed to load districts: ${e.message}`, 'error');
+    document.getElementById('btnDistricts').disabled = false;
+  });
+}
+
+function highlightDistrictAt(lat, lng) {
+  if (!districtsEnabled || !districtLayer || lat == null) return;
+  if (highlightedDistrict) {
+    map.removeLayer(highlightedDistrict);
+    highlightedDistrict = null;
+  }
+
+  const params = new URLSearchParams({
+    where: '1=1',
+    outFields: 'REG,DISTRICT,NAME,EMU_NAME,HARVTYPE,AREA_AC,AREA_KM,AREA_MI,MAPLINK,DEERWEBPAGE,ELKWEBPAGE',
+    geometry: `${lng},${lat}`,
+    geometryType: 'esriGeometryPoint',
+    inSR: '4326',
+    outSR: '4326',
+    relationOp: 'esriSpatialRelIntersects',
+    f: 'json',
+    returnGeometry: 'true',
+    resultRecordCount: 1,
+  });
+
+  fetch(`${DISTRICT_API}?${params}`)
+    .then(r => r.json())
+    .then(data => {
+      const features = data.features || [];
+      if (features.length === 0) {
+        setStatus('Not inside any hunting district', '');
+        return;
+      }
+      const f = features[0];
+      const a = f.attributes;
+      highlightedDistrict = L.geoJSON(f, {
+        style: highlightStyle(f)
+      }).addTo(map);
+      showDistrictPanel(a, f);
+      setStatus(`Hunting District ${a.DISTRICT || '—'}: ${a.NAME}`, '');
+    })
+    .catch(e => {
+      console.warn('District query failed:', e);
+    });
+}
+
+// ═══════════════════════════════════════════
 // Load parcels (online or offline)
 // ═══════════════════════════════════════════
 async function loadParcelsForLocation() {
@@ -561,6 +774,9 @@ function placeGpsMarker() {
 
   // Load parcels at GPS location
   loadParcelsForLocation();
+
+  // Highlight district if layers are active
+  highlightDistrictAt(queryLat, queryLng);
 
   document.getElementById('btnLocate').disabled = false;
   document.getElementById('btnRecenter').disabled = false;
@@ -812,6 +1028,7 @@ async function refreshCacheSize() {
 // ═══════════════════════════════════════════
 document.getElementById('btnLocate').addEventListener('click', locateUser);
 document.getElementById('btnCache').addEventListener('click', cacheArea);
+document.getElementById('btnDistricts').addEventListener('click', toggleDistricts);
 document.getElementById('btnClearCache').addEventListener('click', () => {
   if (confirm('Clear all cached tiles and parcel data?')) clearAllCache();
 });
@@ -824,6 +1041,7 @@ map.on('click', (e) => {
   placeQueryMarker();
   updateCacheCircle();
   loadParcelsForLocation();
+  highlightDistrictAt(queryLat, queryLng);
   document.getElementById('btnCache').disabled = false;
 });
 
@@ -836,6 +1054,7 @@ document.getElementById('btnRecenter').addEventListener('click', () => {
   updateCacheCircle();
   map.setView([gpsLat, gpsLng], 15);
   loadParcelsForLocation();
+  highlightDistrictAt(queryLat, queryLng);
 });
 
 // Show cache panel

@@ -73,6 +73,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;o
 <div id="topbar">
   <div id="topbar-row">
     <button id="btnLocate" title="Use my current location">📍 My Location</button>
+    <button id="btnRecenter" class="secondary" title="Re-center map to your location" disabled>🔄 Re-center</button>
     <button id="btnCache" class="secondary" title="Cache tiles and parcels for current area" disabled>💾 Cache Area</button>
     <button id="btnClearCache" class="danger" title="Remove cached data">🗑️ Clear Cache</button>
   </div>
@@ -82,17 +83,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;o
 <div id="offline-banner">📡 Offline Mode — using cached data</div>
 
 <div id="controls">
-  <label>Radius:</label>
-  <input type="range" id="radiusSlider" min="50" max="2000" value="200" step="10">
-  <span class="val" id="radiusVal">200 m</span>
-  <div class="spacer"></div>
-  <label>Zoom:</label>
-  <select id="cacheZoom">
-    <option value="13,14,15,16" selected>13-16 (full)</option>
-    <option value="14,15,16">14-16 (recommended)</option>
-    <option value="15,16">15-16 (fine detail)</option>
-    <option value="16">16 only</option>
-  </select>
+  <span id="radiusDisplay">Radius: 200 m</span>
 </div>
 
 <div id="cache-panel" style="display:none">
@@ -198,50 +189,7 @@ function dbGetAll(store) {
 }
 
 // ═══════════════════════════════════════════
-// Tile Layer with IndexedDB cache
-// ═══════════════════════════════════════════
-class CachedTileLayer extends L.TileLayer {
-  _cacheStore = 'tiles';
-
-  createTile(coords, done) {
-    const tile = document.createElement('img');
-    tile.crossOrigin = 'anonymous';
-    const key = `${coords.z}/${coords.x}/${coords.y}`;
-
-    dbGet(this._cacheStore, key).then(blob => {
-      if (blob) {
-        tile.src = URL.createObjectURL(blob);
-        tile.onload = () => done(null, tile);
-        tile.onerror = () => { URL.revokeObjectURL(tile.src); this._fetchTile(coords, tile, done); };
-      } else {
-        this._fetchTile(coords, tile, done);
-      }
-    });
-    return tile;
-  }
-
-  _fetchTile(coords, tile, done) {
-    // Use Leaflet's _getTileUrl which handles {s}, {z}, {x}, {y} substitution
-    const url = this._getTileUrl(coords);
-
-    fetch(url).then(r => {
-      if (!r.ok) throw new Error('Tile fetch failed');
-      return r.blob();
-    }).then(blob => {
-      const key = `${coords.z}/${coords.x}/${coords.y}`;
-      dbPut(this._cacheStore, key, blob).catch(() => {});
-      tile.src = URL.createObjectURL(blob);
-      tile.onload = () => done(null, tile);
-      tile.onerror = () => { URL.revokeObjectURL(tile.src); done(new Error('Tile load failed'), tile); };
-    }).catch(() => {
-      tile.classList.add('leaflet-tile-loaded');
-      done(null, tile);
-    });
-  }
-}
-
-// ═══════════════════════════════════════════
-// Map Setup
+// Map Setup — base layers + tile caching
 // ═══════════════════════════════════════════
 const map = L.map('map', {
   zoomControl: false,
@@ -251,39 +199,73 @@ const map = L.map('map', {
 
 L.control.zoom({ position: 'topright' }).addTo(map);
 
-const tileLayer = new CachedTileLayer(
-  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-  { maxZoom: 19 }
-).addTo(map);
+// Base layers
+const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+});
+
+const esriImagery = L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 19,
+  attribution: '&copy; Esri, Maxar, Earthstar Geographics, USDA, USGS, AeroGRID, IGN, and the GIS User Community'
+});
+
+const esriTopo = L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 19,
+  attribution: '&copy; Esri, HERE, Garmin, USGS, and the GIS User Community'
+});
+
+const baseLayers = {
+  'Streets': osmLayer,
+  'Satellite': esriImagery,
+  'Topo': esriTopo
+};
+
+osmLayer.addTo(map);
+
+// Layer switcher top-right (above zoom)
+const layerControl = L.control.layers(baseLayers).addTo(map);
+layerControl._container.style.marginTop = '10px';
 
 // ═══════════════════════════════════════════
 // State
 // ═══════════════════════════════════════════
-let userMarker = null;
+let gpsMarker = null;       // persistent GPS location marker
+let queryMarker = null;     // temporary marker for map click / query location
 let parcelLayer = null;
 let cacheCircle = null;
-let currentLat = null;
-let currentLng = null;
+let gpsLat = null;          // persistent GPS coordinates
+let gpsLng = null;
+let queryLat = null;        // query location (from map click)
+let queryLng = null;
 let cachedAreaKey = null;
 
 const API = 'https://gisservice.mt.gov/ArcGIS/rest/services/msdi_cadastral_map_v1/MapServer/1/query';
 
 // ═══════════════════════════════════════════
-// Radius / Zoom controls
+// Radius — auto-set by zoom level, max 2000m
 // ═══════════════════════════════════════════
-const slider = document.getElementById('radiusSlider');
-const radiusValEl = document.getElementById('radiusVal');
+const radiusDisplay = document.getElementById('radiusDisplay');
 
-slider.addEventListener('input', () => {
-  const val = parseFloat(slider.value);
-  radiusValEl.textContent = `${val} m`;
-  if (currentLat != null) updateCacheCircle();
+function zoomToRadius(zoom) {
+  return Math.round(176000 * Math.pow(0.6, zoom - 3));
+}
+
+function getDistanceMeters() {
+  const auto = zoomToRadius(map.getZoom());
+  return Math.min(auto, 2000);
+}
+
+map.on('zoomend', () => {
+  const r = getDistanceMeters();
+  radiusDisplay.textContent = `Radius: ${r} m`;
+  if (queryLat != null) updateCacheCircle();
 });
 
-function getDistanceMeters() { return parseFloat(slider.value); }
-
 function getRadiusParams() {
-  const val = parseFloat(slider.value);
+  const val = getDistanceMeters();
   const unit = 'esriSRUnit_Meter';
   return { distance: val, units: unit };
 }
@@ -358,10 +340,10 @@ function getAreaKey(lat, lng, radius) {
 // Update cache circle on map
 // ═══════════════════════════════════════════
 function updateCacheCircle() {
-  if (currentLat == null) return;
+  if (queryLat == null) return;
   const r = getDistanceMeters();
   if (cacheCircle) map.removeLayer(cacheCircle);
-  cacheCircle = L.circle([currentLat, currentLng], {
+  cacheCircle = L.circle([queryLat, queryLng], {
     radius: r, color: '#8b5cf6', fillColor: '#8b5cf6',
     fillOpacity: 0.1, weight: 2, dashArray: '6,6'
   }).addTo(map);
@@ -384,7 +366,7 @@ async function fetchParcelsOnline(lat, lng) {
     relationOp: 'esriSpatialRelIntersects',
     f: 'json',
     returnGeometry: 'true',
-    resultRecordCount: 2000,
+    resultRecordCount: 5000,
   });
 
   const resp = await fetch(`${API}?${params}`);
@@ -406,7 +388,7 @@ async function fetchParcelsByBbox(west, south, east, north) {
     relationOp: 'esriSpatialRelIntersects',
     f: 'json',
     returnGeometry: 'true',
-    resultRecordCount: 2000,
+    resultRecordCount: 5000,
   });
 
   const resp = await fetch(`${API}?${params}`);
@@ -495,7 +477,7 @@ function showParcelPanel(a, owner) {
 // Load parcels (online or offline)
 // ═══════════════════════════════════════════
 async function loadParcelsForLocation() {
-  if (currentLat == null) return;
+  if (queryLat == null) return;
 
   // Check offline mode
   const isOffline = !navigator.onLine;
@@ -503,7 +485,7 @@ async function loadParcelsForLocation() {
 
   // Try online first (if available)
   try {
-    const features = await fetchParcelsOnline(currentLat, currentLng);
+    const features = await fetchParcelsOnline(queryLat, queryLng);
     renderParcels(features);
     setStatus(`Found ${features.length} parcels nearby`, '');
     return;
@@ -532,51 +514,73 @@ async function loadParcelsForLocation() {
 function locateUser() {
   setStatus('Locating...', 'loading');
   document.getElementById('btnLocate').disabled = true;
+  document.getElementById('btnRecenter').disabled = true;
 
   if (!navigator.geolocation) {
-    setStatus('Geolocation not supported', 'error');
+    setStatus('Geolocation not supported by this browser', 'error');
     document.getElementById('btnLocate').disabled = false;
     return;
   }
 
   navigator.geolocation.getCurrentPosition(
     (pos) => {
-      currentLat = pos.coords.latitude;
-      currentLng = pos.coords.longitude;
+      gpsLat = pos.coords.latitude;
+      gpsLng = pos.coords.longitude;
+      queryLat = gpsLat;
+      queryLng = gpsLng;
       cachedAreaKey = null;
-      placeUserMarker();
+      placeGpsMarker();
     },
     (err) => {
-      setStatus(`Location error: ${err.message}`, 'error');
+      let msg = 'Could not get your location.';
+      if (err.code === 1) msg = 'Location permission denied. Enable location access in your browser settings.';
+      else if (err.code === 2) msg = 'Position unavailable. Try clicking the map manually.';
+      else if (err.code === 3) msg = 'Location request timed out. Try again or click the map.';
+      setStatus(msg, 'error');
       document.getElementById('btnLocate').disabled = false;
     },
-    { enableHighAccuracy: true, timeout: 10000 }
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
   );
 }
 
-function placeUserMarker() {
-  if (userMarker) map.removeLayer(userMarker);
-  userMarker = L.circleMarker([currentLat, currentLng], {
-    radius: 8, color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.6, weight: 2
+function placeGpsMarker() {
+  if (gpsMarker) map.removeLayer(gpsMarker);
+  gpsMarker = L.circleMarker([gpsLat, gpsLng], {
+    radius: 10, color: '#2563eb', fillColor: '#2563eb', fillOpacity: 0.5, weight: 2
   }).addTo(map);
+  gpsMarker.bindTooltip('You are here', { direction: 'top', offset: [0, -10] });
 
+  // Also set query location and show click marker
+  queryLat = gpsLat;
+  queryLng = gpsLng;
+  placeQueryMarker();
   updateCacheCircle();
-  map.setView([currentLat, currentLng], 15);
+
+  // Center map on GPS location
+  map.setView([gpsLat, gpsLng], 13);
+
+  // Load parcels at GPS location
   loadParcelsForLocation();
+
+  document.getElementById('btnLocate').disabled = false;
+  document.getElementById('btnRecenter').disabled = false;
   document.getElementById('btnCache').disabled = false;
+}
+
+function placeQueryMarker() {
+  if (queryMarker) map.removeLayer(queryMarker);
+  queryMarker = L.circleMarker([queryLat, queryLng], {
+    radius: 6, color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.7, weight: 2
+  }).addTo(map);
 }
 
 // ═══════════════════════════════════════════
 // Cache an area (tiles + parcels)
 // ═══════════════════════════════════════════
 async function cacheArea() {
-  if (currentLat == null) return;
+  if (queryLat == null) return;
 
-  const radius = getDistanceMeters();
-  const bbox = bboxFromCenter(currentLat, currentLng, radius);
-  const zooms = document.getElementById('cacheZoom').value.split(',').map(Number);
-  const areaKey = getAreaKey(currentLat, currentLng, radius);
-  cachedAreaKey = areaKey;
+  const radius = 2000; // always cache 2000m for full coverage
 
   const progress = document.getElementById('cache-progress');
   const title = document.getElementById('cacheTitle');
@@ -589,8 +593,9 @@ async function cacheArea() {
 
   try {
     // Step 1: Cache tiles
+    const bbox = bboxFromCenter(queryLat, queryLng, radius);
+    const zooms = [14, 15, 16];
     let totalTiles = 0;
-    let cachedTiles = 0;
     for (const z of zooms) {
       const tr = tileRangeFromBbox(bbox.west, bbox.south, bbox.east, bbox.north, z);
       totalTiles += (tr.xMax - tr.xMin + 1) * (tr.yMax - tr.yMin + 1);
@@ -618,27 +623,45 @@ async function cacheArea() {
               // Skip failed tiles
             }
           }
-          cachedTiles++;
           tilesSoFar++;
           const pct = Math.round((tilesSoFar / totalTiles) * 70);
           bar.style.width = pct + '%';
-          detail.textContent = `${cachedTiles}/${totalTiles} tiles cached (${z})`;
+          detail.textContent = `${tilesSoFar}/${totalTiles} tiles cached (${z})`;
           // Yield to keep UI responsive
           if (tilesSoFar % 20 === 0) await new Promise(r => setTimeout(r, 0));
         }
       }
     }
 
-    // Step 2: Cache parcel data
+    // Step 2: Cache parcel data — use point+distance query (reliable)
     title.textContent = 'Downloading parcel data...';
     bar.style.width = '75%';
     detail.textContent = 'Querying property records';
 
-    const parcels = await fetchParcelsByBbox(bbox.west, bbox.south, bbox.east, bbox.north);
+    const params = new URLSearchParams({
+      where: '1=1',
+      outFields: 'PARCELID,OwnerName,CountyName,TaxYear,TotalValue,TotalLandValue,TotalBuildingValue,TotalAcres,AddressLine1,AddressLine2,CityStateZip,PropType,OwnerAddress1,OwnerAddress2,OwnerCity,OwnerState,OwnerZipCode,AssessmentCode,Township,Range,Section,LegalDescriptionShort,Subdivision',
+      geometry: `${queryLng},${queryLat}`,
+      geometryType: 'esriGeometryPoint',
+      inSR: '4326',
+      outSR: '4326',
+      distance: radius,
+      units: 'esriSRUnit_Meter',
+      relationOp: 'esriSpatialRelIntersects',
+      f: 'json',
+      returnGeometry: 'true',
+      resultRecordCount: 5000,
+    });
+
+    const resp = await fetch(`${API}?${params}`);
+    const data = await resp.json();
+    const parcels = data.features || [];
+
+    const areaKey = getAreaKey(queryLat, queryLng, radius);
     await dbPut('parcels', areaKey, {
       key: areaKey,
-      lat: currentLat,
-      lng: currentLng,
+      lat: queryLat,
+      lng: queryLng,
       radius: radius,
       bbox: [bbox.west, bbox.south, bbox.east, bbox.north],
       features: parcels,
@@ -648,8 +671,8 @@ async function cacheArea() {
     // Step 3: Update manifest
     await dbPut('manifest', areaKey, {
       key: areaKey,
-      lat: currentLat,
-      lng: currentLng,
+      lat: queryLat,
+      lng: queryLng,
       radius: radius,
       tileCount: totalTiles,
       parcelCount: parcels.length,
@@ -701,13 +724,14 @@ async function loadCachedArea(key) {
   try {
     const data = await dbGet('parcels', key);
     if (data && data.features) {
-      currentLat = data.lat;
-      currentLng = data.lng;
+      gpsLat = data.lat;
+      gpsLng = data.lng;
+      queryLat = data.lat;
+      queryLng = data.lng;
       cachedAreaKey = key;
-      placeUserMarker();
-      slider.value = data.radius;
-      radiusValEl.textContent = `${data.radius} m`;
+      placeGpsMarker();
       updateCacheCircle();
+      radiusDisplay.textContent = `Radius: ${getDistanceMeters()} m`;
       document.getElementById('btnCache').disabled = false;
       renderParcels(data.features);
       setStatus(`Loaded cached area: ${data.features.length} parcels`, '');
@@ -792,12 +816,26 @@ document.getElementById('btnClearCache').addEventListener('click', () => {
   if (confirm('Clear all cached tiles and parcel data?')) clearAllCache();
 });
 
-// Click map to set location
+// Click map to set query location (GPS marker stays visible)
 map.on('click', (e) => {
-  currentLat = e.latlng.lat;
-  currentLng = e.latlng.lng;
+  queryLat = e.latlng.lat;
+  queryLng = e.latlng.lng;
   cachedAreaKey = null;
-  placeUserMarker();
+  placeQueryMarker();
+  updateCacheCircle();
+  loadParcelsForLocation();
+  document.getElementById('btnCache').disabled = false;
+});
+
+// Re-center button: go back to GPS location
+document.getElementById('btnRecenter').addEventListener('click', () => {
+  if (gpsLat == null) return;
+  queryLat = gpsLat;
+  queryLng = gpsLng;
+  placeQueryMarker();
+  updateCacheCircle();
+  map.setView([gpsLat, gpsLng], 15);
+  loadParcelsForLocation();
 });
 
 // Show cache panel
@@ -809,6 +847,13 @@ map.on('moveend', () => {
 // Init
 // ═══════════════════════════════════════════
 (async () => {
+  // Verify Leaflet loaded
+  if (typeof L === 'undefined') {
+    document.getElementById('status').textContent = 'Error: Map library failed to load';
+    document.getElementById('status').className = 'status error';
+    return;
+  }
+
   await dbOpen();
   await refreshCacheSize();
 

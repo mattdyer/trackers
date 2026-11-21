@@ -1,5 +1,5 @@
 // Service Worker - caches the app shell so the app loads offline
-const CACHE_NAME = 'mt-cadastral-v1';
+const CACHE_NAME = 'mt-cadastral-v16';
 const SHELL_URLS = [
   '/',
   '/mt-cadastral.html',

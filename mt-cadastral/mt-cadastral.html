@@ -47,6 +47,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;o
 #infopanel .body .value{color:#1e293b;word-break:break-word}
 #infopanel .body .value.muted{color:#94a3b8;font-style:italic}
 #infopanel .body .section{border-top:1px solid #e2e8f0;margin-top:10px;padding-top:10px}
+#infopanel .body .district-section{display:none}
+#infopanel .body .district-section.visible{display:block !important}
+#infopanel .body .district-section.visible .section{display:block !important}
+#infopanel .body.property-tab > .section{display:block}
+#infopanel .body.district-tab > .section{display:none}
 #infopanel .body .harvest-list{list-style:none;padding:0;margin:4px 0 0}
 #infopanel .body .harvest-list li{padding:2px 0 2px 18px;position:relative;font-size:13px}
 #infopanel .body .harvest-list li::before{content:'•';position:absolute;left:4px;color:#94a3b8}
@@ -590,23 +595,18 @@ function switchTab(tabName) {
     titleEl.textContent = owner || 'Property Details';
   }
 
-  // Toggle property vs district content sections
+  // Toggle property vs district content by CSS class
   const body = document.getElementById('panelBody');
   if (tabName === 'district') {
-    // Save property content before clearing (querySelectorAll is live)
-    if (!_propertyTabContent) {
-      _propertyTabContent = body.innerHTML;
-    }
-    // Save district section refs before clearing
-    const distSections = [...body.querySelectorAll('.district-section')];
-    body.innerHTML = '';
-    distSections.forEach(s => { s.style.display = ''; body.appendChild(s); });
+    body.classList.add('district-tab');
+    body.classList.remove('property-tab');
+    // Show district sections (override inline display:none)
+    body.querySelectorAll('.district-section').forEach(s => s.classList.add('visible'));
   } else {
-    // Restore property content if not yet saved
-    if (_propertyTabContent) {
-      body.innerHTML = _propertyTabContent;
-    }
-    body.querySelectorAll('.district-section').forEach(s => { s.style.display = 'none'; });
+    body.classList.add('property-tab');
+    body.classList.remove('district-tab');
+    // Hide district sections
+    body.querySelectorAll('.district-section').forEach(s => s.classList.remove('visible'));
   }
 }
 
@@ -694,7 +694,6 @@ async function showParcelDistrictPanel(a, owner, distData) {
 
   // Load harvestable game data (async)
   let harvestHtml = '';
-  let _harvestSection = null;
   const distKey = String(distData.DISTRICT || '');
   if (distKey) {
     const reg = await loadRegulations();
@@ -741,7 +740,6 @@ async function showParcelDistrictPanel(a, owner, distData) {
       // Harvestable game section → district tab wrapper
       const wrapper = document.createElement('div');
       wrapper.className = 'district-section';
-      wrapper.style.display = 'none';
       wrapper.innerHTML = s;
       body.appendChild(wrapper);
     } else {
@@ -754,13 +752,13 @@ async function showParcelDistrictPanel(a, owner, distData) {
         // District section → wrapped in district-section
         const wrapper = document.createElement('div');
         wrapper.className = 'district-section';
-        wrapper.style.display = 'none';
         wrapper.innerHTML = s;
         body.appendChild(wrapper);
       }
     }
   });
 
+  body.classList.add('property-tab');
   document.getElementById('infopanel').classList.add('open');
 }
 
@@ -955,15 +953,8 @@ function toggleDistricts() {
 
     districtLayer = L.geoJSON(geojson, {
       style: districtStyle,
+      interactive: false,  // Base layer: visual only, doesn't capture clicks
       onEachFeature: (feature, layer) => {
-        layer.on('click', (e) => {
-          L.DomEvent.stop(e);
-          if (highlightedDistrict) map.removeLayer(highlightedDistrict);
-          highlightedDistrict = L.geoJSON(feature, {
-            style: highlightStyle(feature)
-          }).addTo(map);
-          showDistrictPanel(feature.properties, feature);
-        });
         layer.on('mouseover', (e) => {
           if (!highlightedDistrict) {
             e.target.setStyle({ fillOpacity: 0.3 });
@@ -976,6 +967,23 @@ function toggleDistricts() {
         });
       }
     }).addTo(map);
+
+    // Interactive overlay for click (on top of base layer, but parcels still above it via bringToFront)
+    const districtOverlay = L.geoJSON(geojson, {
+      style: { fillOpacity: 0, opacity: 0 },
+      interactive: true,
+      onEachFeature: (feature, layer) => {
+        layer.on('click', (e) => {
+          L.DomEvent.stop(e);
+          if (highlightedDistrict) map.removeLayer(highlightedDistrict);
+          highlightedDistrict = L.geoJSON(feature, {
+            style: highlightStyle(feature)
+          }).addTo(map);
+          showDistrictPanel(feature.properties, feature);
+        });
+      }
+    }).addTo(map);
+    window._districtOverlay = districtOverlay;
 
     districtsEnabled = true;
     document.getElementById('btnDistricts').style.background = '#d97706';

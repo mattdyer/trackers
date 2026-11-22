@@ -47,9 +47,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;o
 #infopanel .body .value{color:#1e293b;word-break:break-word}
 #infopanel .body .value.muted{color:#94a3b8;font-style:italic}
 #infopanel .body .section{border-top:1px solid #e2e8f0;margin-top:10px;padding-top:10px}
+#infopanel .body .harvest-list{list-style:none;padding:0;margin:4px 0 0}
+#infopanel .body .harvest-list li{padding:2px 0 2px 18px;position:relative;font-size:13px}
+#infopanel .body .harvest-list li::before{content:'•';position:absolute;left:4px;color:#94a3b8}
+#infopanel .body .harvest-section-title{font-weight:700;font-size:14px;margin-bottom:4px}
 #parcel-count{position:absolute;bottom:20px;right:10px;z-index:1000;background:#1e293b;color:#fff;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;box-shadow:0 2px 12px rgba(0,0,0,.2)}
-#cache-panel{position:absolute;top:130px;right:10px;z-index:1000;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-radius:12px;padding:12px;box-shadow:0 2px 12px rgba(0,0,0,.2);width:240px;font-size:13px;max-height:60vh;overflow-y:auto}
-#cache-panel h3{font-size:14px;margin-bottom:8px;color:#1e293b}
+#tab-bar{display:none;width:100%;border-bottom:2px solid #e2e8f0;background:#f8fafc}
+#tab-bar.visible{display:flex}
+#tab-bar button{flex:1;padding:8px 0;background:none;border:none;border-bottom:3px solid transparent;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;transition:all .2s}
+#tab-bar button.active{color:#1e293b;border-bottom-color:#2563eb}
+#tab-bar button:hover{background:#f1f5f9}
+#tab-content{display:none}
+#tab-content.active{display:block}
+#cache-toggle{position:absolute;top:140px;left:10px;z-index:1000;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-radius:10px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.2);transition:transform .2s ease,box-shadow .2s ease;user-select:none}
+#cache-toggle:hover{transform:scale(1.1);box-shadow:0 3px 16px rgba(0,0,0,.25)}
+#cache-toggle.active{background:#2563eb;color:#fff}
+#cache-panel{position:absolute;top:140px;left:60px;z-index:1000;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-radius:12px;padding:0;box-shadow:0 2px 12px rgba(0,0,0,.2);width:260px;font-size:13px;max-height:60vh;overflow-y:auto;transition:opacity .2s ease,transform .2s ease;opacity:1;transform:translateX(0)}
+#cache-panel.hidden{opacity:0;transform:translateX(-20px);pointer-events:none}
+#cache-panel h3{font-size:14px;margin:0;padding:12px 14px 8px;color:#1e293b;border-bottom:1px solid #e2e8f0}
 #cache-panel .item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #e2e8f0;font-size:12px}
 #cache-panel .item:last-child{border-bottom:none}
 #cache-panel .item-name{flex:1;font-weight:500;color:#334155}
@@ -87,15 +102,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;o
   <span id="radiusDisplay">Radius: 200 m</span>
 </div>
 
-<div id="cache-panel" style="display:none">
+<div id="cache-toggle" title="Cached areas" style="display:none">💾</div>
+
+<div id="cache-panel" class="hidden">
   <h3>💾 Cached Areas</h3>
-  <div id="cacheList"><em style="color:#94a3b8;font-size:12px">No cached areas</em></div>
+  <div id="cacheList" style="padding:8px 14px"><em style="color:#94a3b8;font-size:12px">No cached areas</em></div>
 </div>
 
 <div id="parcel-count"><span id="countText">0 parcels</span></div>
 
 <div id="infopanel">
   <div class="drag-handle"></div>
+  <div id="tab-bar"></div>
   <div class="header">
     <span id="panelTitle">Property Details</span>
     <button class="close" onclick="closePanel()">&times;</button>
@@ -260,6 +278,9 @@ const REGION_COLORS = {
 let districtLayer = null;
 let districtsEnabled = false;
 let highlightedDistrict = null;  // currently highlighted district GeoJSON layer
+let regulationsData = null;      // cached harvest regulations
+let regulationsLoaded = false;   // whether regulations file has been fetched
+let _parcelTabDistrict = null;   // district data for tabbed parcel panel
 
 // ═══════════════════════════════════════════
 // Radius — auto-set by zoom level, max 2000m
@@ -306,12 +327,20 @@ function fmt(n) {
 
 function closePanel() {
   document.getElementById('infopanel').classList.remove('open');
+  clearTabs();
 }
 
 function openPanel(title, html) {
+  clearTabs();
   document.getElementById('panelTitle').textContent = title;
   document.getElementById('panelBody').innerHTML = html;
   document.getElementById('infopanel').classList.add('open');
+}
+
+function clearTabs() {
+  document.getElementById('tab-bar').innerHTML = '';
+  document.getElementById('tab-bar').className = '';
+  _parcelTabDistrict = null;
 }
 
 // ═══════════════════════════════════════════
@@ -450,10 +479,69 @@ function renderParcels(features) {
       const a = feature.properties;
       const owner = a.OwnerName || 'Unknown Owner';
       const address = [a.AddressLine1, a.AddressLine2, a.CityStateZip].filter(Boolean).join(', ');
+      const parcelKey = a.PARCELID || `parcel_${Math.random().toString(36).substr(2, 9)}`;
 
-      layer.bindPopup(`<strong>${owner}</strong><br><em>${address || 'No street address'}</em><br><span style="color:#64748b">Value: ${fmt(a.TotalValue)}</span>`);
+      // Click on map layer opens the parcel popup (flyout only)
+      layer.on('click', (e) => {
+        L.DomEvent.stopPropagation(e.originalEvent);
+        layer.openPopup();
+      });
 
-      layer.on('click', () => showParcelPanel(a, owner));
+      // Attach parcel data to layer for popup
+      layer._parcelData = { a, owner, address, parcelKey };
+
+      // Bind popup — use function callback so content is created at open time
+      layer.bindPopup((l) => {
+        const pd = layer._parcelData;
+        const valueHtml = pd.a.TotalValue != null ? `Value: ${fmt(pd.a.TotalValue)}` : '';
+        const html = `<strong>${pd.owner}</strong><br><em>${pd.address || 'No street address'}</em>${valueHtml ? `<br><span style="color:#64748b">${valueHtml}</span>` : ''}<br><button class="parcel-more-btn" data-parcel-key="${pd.parcelKey}" style="margin-top:6px;padding:4px 12px;background:#2563eb;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;width:100%">More</button>`;
+
+        // Immediately wire the More button (popup content just created)
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html;
+        const btn = wrapper.querySelector('.parcel-more-btn');
+        if (btn) {
+          btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const pd = layer._parcelData;
+            if (districtsEnabled) {
+              // Query district at parcel centroid
+              const centroid = getFeatureCentroid(feature);
+              if (centroid) {
+                try {
+                  const params = new URLSearchParams({
+                    where: '1=1',
+                    outFields: 'REG,DISTRICT,NAME,EMU_NAME,HARVTYPE,AREA_AC,AREA_KM,AREA_MI,MAPLINK,DEERWEBPAGE,ELKWEBPAGE',
+                    geometry: `${centroid.lng},${centroid.lat}`,
+                    geometryType: 'esriGeometryPoint',
+                    inSR: '4326',
+                    outSR: '4326',
+                    relationOp: 'esriSpatialRelIntersects',
+                    f: 'json',
+                    returnGeometry: 'true',
+                    resultRecordCount: 1,
+                  });
+                  const resp = await fetch(`${DISTRICT_API}?${params}`);
+                  const data = await resp.json();
+                  const feats = data.features || [];
+                  if (feats.length > 0) {
+                    const a = feats[0].attributes;
+                    showParcelDistrictPanel(pd.a, pd.owner, a);
+                    return;
+                  }
+                } catch (err) {
+                  console.warn('District query for parcel failed:', err);
+                }
+              }
+              // Fallback to regular panel if district query fails
+              showParcelPanel(pd.a, pd.owner);
+            } else {
+              showParcelPanel(pd.a, pd.owner);
+            }
+          });
+        }
+        return wrapper;
+      }, { maxWidth: 280 });
     }
   }).addTo(map);
 
@@ -490,6 +578,135 @@ function showParcelPanel(a, owner) {
   `);
 }
 
+function switchTab(tabName) {
+  const bar = document.getElementById('tab-bar');
+  const btns = bar.querySelectorAll('button');
+  btns.forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
+  const titleEl = document.getElementById('panelTitle');
+  if (tabName === 'district' && _parcelTabDistrict) {
+    titleEl.textContent = `${_parcelTabDistrict.NAME || 'Hunting District'}`;
+  } else {
+    const owner = document.getElementById('panelTitle')?.dataset?.owner || '';
+    titleEl.textContent = owner || 'Property Details';
+  }
+}
+
+async function showParcelDistrictPanel(a, owner, distData) {
+  const ownerAddr = [a.OwnerAddress1, a.OwnerAddress2, (a.OwnerCity ? a.OwnerCity + ' ' : '') + (a.OwnerState || ''), a.OwnerZipCode].filter(Boolean).join(', ');
+  const address = [a.AddressLine1, a.AddressLine2, a.CityStateZip].filter(Boolean).join(', ');
+  const legal = [a.Township, a.Range, a.Section].filter(Boolean).join(' ');
+
+  // Store owner for tab switching
+  document.getElementById('panelTitle').dataset.owner = owner;
+
+  // Build property content
+  const propHtml = `
+    <div class="section">
+      <div class="row"><span class="label">Owner</span><span class="value">${owner}</span></div>
+      ${ownerAddr ? `<div class="row"><span class="label">Mailing Addr</span><span class="value">${ownerAddr}</span></div>` : ''}
+      ${a.DbaName ? `<div class="row"><span class="label">DBA</span><span class="value">${a.DbaName}</span></div>` : ''}
+      ${address ? `<div class="row"><span class="label">Property</span><span class="value">${address}</span></div>` : ''}
+    </div>
+    <div class="section">
+      <div class="row"><span class="label">Total Value</span><span class="value">${fmt(a.TotalValue)}</span></div>
+      <div class="row"><span class="label">Land Value</span><span class="value">${fmt(a.TotalLandValue)}</span></div>
+      <div class="row"><span class="label">Bldg Value</span><span class="value">${fmt(a.TotalBuildingValue)}</span></div>
+      <div class="row"><span class="label">Acres</span><span class="value">${a.TotalAcres != null ? Number(a.TotalAcres).toFixed(3) : 'N/A'}</span></div>
+      <div class="row"><span class="label">Tax Year</span><span class="value">${a.TaxYear || 'N/A'}</span></div>
+    </div>
+    <div class="section">
+      <div class="row"><span class="label">County</span><span class="value">${a.CountyName || 'N/A'}</span></div>
+      <div class="row"><span class="label">Type</span><span class="value">${a.PropType || 'N/A'}</span></div>
+      <div class="row"><span class="label">Geocode</span><span class="value" style="font-family:monospace;font-size:11px">${a.PARCELID || 'N/A'}</span></div>
+      ${legal ? `<div class="row"><span class="label">T/R/S</span><span class="value">${legal}</span></div>` : ''}
+      ${a.LegalDescriptionShort ? `<div class="row"><span class="label">Legal Desc</span><span class="value">${a.LegalDescriptionShort}</span></div>` : ''}
+      ${a.Subdivision ? `<div class="row"><span class="label">Subdivision</span><span class="value">${a.Subdivision}</span></div>` : ''}
+    </div>
+  `;
+
+  // Build district content
+  const distNum = a.DISTINCT ? `#${a.DISTRICT}` : '—';
+  const areas = [
+    a.AREA_AC != null ? `${formatArea(a.AREA_AC)} ac` : '',
+    a.AREA_KM != null ? `${Number(a.AREA_KM).toFixed(1)} km²` : '',
+    a.AREA_MI != null ? `${Number(a.AREA_MI).toFixed(1)} mi²` : '',
+  ].filter(Boolean).join('  ·  ');
+
+  let distLinks = '';
+  if (a.MAPLINK) {
+    distLinks += `<a href="${a.MAPLINK}" target="_blank" rel="noopener">📄 District Map</a>`;
+  }
+  if (a.DEERWEBPAGE) {
+    distLinks += distLinks ? '  ·  ' : '';
+    distLinks += `<a href="${a.DEERWEBPAGE}" target="_blank" rel="noopener">🦌 Deer Info</a>`;
+  }
+  if (a.ELKWEBPAGE) {
+    distLinks += distLinks ? '  ·  ' : '';
+    distLinks += `<a href="${a.ELKWEBPAGE}" target="_blank" rel="noopener">🦌 Elk Info</a>`;
+  }
+
+  const distHtml = `
+    <div class="section">
+      <div class="row"><span class="label">District</span><span class="value">${a.DISTRICT ? '#' + a.DISTRICT : '—'}</span></div>
+      <div class="row"><span class="label">Name</span><span class="value">${a.NAME || '—'}</span></div>
+      <div class="row"><span class="label">Region</span><span class="value">${a.REG != null ? 'Region ' + a.REG : '—'}</span></div>
+      <div class="row"><span class="label">Harvest Type</span><span class="value">${a.HARVTYPE || '—'}</span></div>
+      ${a.EMU_NAME ? `<div class="row"><span class="label">EMU</span><span class="value">${a.EMU_NAME}</span></div>` : ''}
+      ${areas ? `<div class="row"><span class="label">Area</span><span class="value">${areas}</span></div>` : ''}
+    </div>
+    ${distLinks ? `<div class="section" style="text-align:center"><span style="font-size:14px">${distLinks}</span></div>` : ''}
+  `;
+
+  // Store district data for tab switching
+  _parcelTabDistrict = a;
+
+  // Show tab bar
+  const tabBar = document.getElementById('tab-bar');
+  tabBar.innerHTML = `<button class="active" data-tab="property">Property</button><button data-tab="district">District</button>`;
+  tabBar.className = 'visible';
+
+  // Wire tab switches
+  tabBar.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+
+  // Show property tab by default
+  document.getElementById('panelTitle').textContent = owner;
+
+  // Build combined content, separating property and district sections
+  const body = document.getElementById('panelBody');
+  let propSections = '';
+  let distSections = '';
+  let inDistrict = false;
+
+  // Property-related labels
+  const propLabels = ['Owner', 'Mailing Addr', 'DBA', 'Property', 'Total Value', 'Land Value', 'Bldg Value', 'Acres', 'Tax Year', 'County', 'Type', 'Geocode', 'T/R/S', 'Legal Desc', 'Subdivision'];
+  const distLabels = ['District', 'Name', 'Region', 'Harvest Type', 'EMU', 'Area'];
+
+  // Build a combined HTML and split by sections
+  const combinedHtml = propHtml + distHtml;
+  // Use regex to split at section boundaries
+  const sectionMatches = combinedHtml.match(/<div class="section">([\s\S]*?)<\/div>/g) || [];
+
+  // Re-wrap: property sections go in the body directly, district sections go hidden
+  body.innerHTML = '';
+  sectionMatches.forEach(s => {
+    const firstLabel = s.match(/<span class="label">([^<]+)/);
+    const label = firstLabel ? firstLabel[1] : '';
+    if (propLabels.includes(label)) {
+      body.innerHTML += s;
+    } else {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'district-section';
+      wrapper.style.display = 'none';
+      wrapper.innerHTML = s;
+      body.appendChild(wrapper);
+    }
+  });
+
+  document.getElementById('infopanel').classList.add('open');
+}
+
 // ═══════════════════════════════════════════
 // Hunting Districts
 // ═══════════════════════════════════════════
@@ -512,7 +729,7 @@ function districtColor(reg) {
 }
 
 function districtStyle(feature) {
-  const reg = feature.attributes.REG;
+  const reg = feature.properties.REG;
   const color = districtColor(reg);
   return {
     color: color,
@@ -524,7 +741,7 @@ function districtStyle(feature) {
 }
 
 function highlightStyle(feature) {
-  const reg = feature.attributes.REG;
+  const reg = feature.properties.REG;
   const color = districtColor(reg);
   return {
     color: color,
@@ -543,7 +760,73 @@ function formatArea(acres) {
   return a.toFixed(0) + ' ac';
 }
 
-function showDistrictPanel(a, feature) {
+function getFeatureCentroid(feature) {
+  // Get center of feature bounds (from GeoJSON geometry)
+  if (!feature || !feature.geometry) return null;
+  const geom = feature.geometry;
+  let coords = [];
+  if (geom.type === 'Polygon') {
+    coords = geom.coordinates[0];
+  } else if (geom.type === 'MultiPolygon') {
+    coords = geom.coordinates[0][0];
+  } else if (geom.rings) {
+    coords = geom.rings[0];
+  } else if (geom.type === 'Point') {
+    return geom.coordinates;
+  }
+  if (!coords.length) return null;
+  let latSum = 0, lngSum = 0;
+  for (const c of coords) { lngSum += c[0]; latSum += c[1]; }
+  return { lat: latSum / coords.length, lng: lngSum / coords.length };
+}
+
+// Load regulations JSON (cached after first fetch)
+async function loadRegulations() {
+  if (regulationsLoaded) return regulationsData;
+  try {
+    const resp = await fetch('montana_general_tag_regulations.json');
+    if (resp.ok) {
+      regulationsData = await resp.json();
+      regulationsLoaded = true;
+      return regulationsData;
+    }
+  } catch (e) {
+    console.warn('Failed to load regulations:', e);
+  }
+  return {};
+}
+
+function buildHarvestHtml(a) {
+  const distKey = String(a.DISTRICT || '');
+  if (!distKey) return '';
+
+  // Try to get harvest info (will load regulations if needed)
+  return loadRegulations().then(data => {
+    const reg = data[distKey];
+    if (!reg || (!reg.deer && !reg.elk)) return '';
+
+    let html = '<div class="section"><div style="font-weight:700;font-size:14px;margin-bottom:6px">Harvestable Game</div>';
+
+    if (reg.deer && reg.deer.length) {
+      html += `<div class="harvest-section-title">🦌 Deer</div>`;
+      html += '<ul class="harvest-list">';
+      reg.deer.forEach(d => { html += `<li>${d}</li>`; });
+      html += '</ul>';
+    }
+
+    if (reg.elk && reg.elk.length) {
+      html += `<div class="harvest-section-title">🦌 Elk</div>`;
+      html += '<ul class="harvest-list">';
+      reg.elk.forEach(e => { html += `<li>${e}</li>`; });
+      html += '</ul>';
+    }
+
+    html += '</div>';
+    return html;
+  }).catch(() => '');
+}
+
+async function showDistrictPanel(a, feature) {
   const distNum = a.DISTRICT ? `#${a.DISTRICT}` : '—';
   const areas = [
     a.AREA_AC != null ? `${formatArea(a.AREA_AC)} ac` : '',
@@ -564,6 +847,9 @@ function showDistrictPanel(a, feature) {
     links += `<a href="${a.ELKWEBPAGE}" target="_blank" rel="noopener">🦌 Elk Info</a>`;
   }
 
+  // Load regulations and build harvest section
+  const harvestHtml = await buildHarvestHtml(a);
+
   openPanel(`${a.NAME || 'Hunting District'}`, `
     <div class="section">
       <div class="row"><span class="label">District</span><span class="value">${distNum}</span></div>
@@ -574,6 +860,7 @@ function showDistrictPanel(a, feature) {
       ${areas ? `<div class="row"><span class="label">Area</span><span class="value">${areas}</span></div>` : ''}
     </div>
     ${links ? `<div class="section" style="text-align:center"><span style="font-size:14px">${links}</span></div>` : ''}
+    ${harvestHtml}
   `);
 }
 
@@ -592,6 +879,8 @@ function toggleDistricts() {
     document.getElementById('btnDistricts').classList.add('secondary');
     document.getElementById('btnDistricts').style.background = '';
     setStatus('Hunting districts hidden', '');
+    // Keep parcels above any remaining highlights
+    if (parcelLayer) parcelLayer.bringToFront();
     return;
   }
 
@@ -615,7 +904,7 @@ function toggleDistricts() {
           highlightedDistrict = L.geoJSON(feature, {
             style: highlightStyle(feature)
           }).addTo(map);
-          showDistrictPanel(feature.attributes, feature);
+          showDistrictPanel(feature.properties, feature);
         });
         layer.on('mouseover', (e) => {
           if (!highlightedDistrict) {
@@ -635,6 +924,9 @@ function toggleDistricts() {
     setStatus(`Loaded ${features.length} hunting districts`, '');
     document.getElementById('btnDistricts').disabled = false;
 
+    // Put parcels above districts so they remain clickable
+    if (parcelLayer) parcelLayer.bringToFront();
+
     // Highlight district at current query location if active
     if (queryLat != null) {
       highlightDistrictAt(queryLat, queryLng);
@@ -645,7 +937,7 @@ function toggleDistricts() {
   });
 }
 
-function highlightDistrictAt(lat, lng) {
+function highlightDistrictAt(lat, lng, showPanel = true) {
   if (!districtsEnabled || !districtLayer || lat == null) return;
   if (highlightedDistrict) {
     map.removeLayer(highlightedDistrict);
@@ -675,10 +967,18 @@ function highlightDistrictAt(lat, lng) {
       }
       const f = features[0];
       const a = f.attributes;
-      highlightedDistrict = L.geoJSON(f, {
-        style: highlightStyle(f)
+      // Convert ArcGIS feature to GeoJSON format (attributes -> properties)
+      const geoFeature = {
+        type: 'Feature',
+        geometry: toGeoJSONGeom(f.geometry),
+        properties: a
+      };
+      highlightedDistrict = L.geoJSON(geoFeature, {
+        style: highlightStyle(geoFeature)
       }).addTo(map);
-      showDistrictPanel(a, f);
+      if (showPanel) {
+        showDistrictPanel(a, f);
+      }
       setStatus(`Hunting District ${a.DISTRICT || '—'}: ${a.NAME}`, '');
     })
     .catch(e => {
@@ -903,6 +1203,9 @@ async function cacheArea() {
     renderParcels(parcels);
     setStatus(`Cached area: ${totalTiles} tiles, ${parcels.length} parcels`, '');
     await refreshCacheList();
+    // Open panel to show what was cached
+    document.getElementById('cache-panel').classList.remove('hidden');
+    document.getElementById('cache-toggle').classList.add('active');
 
   } catch (e) {
     title.textContent = 'Cache failed';
@@ -916,6 +1219,10 @@ async function cacheArea() {
 // ═══════════════════════════════════════════
 // Cache list management
 // ═══════════════════════════════════════════
+document.getElementById('cache-toggle').addEventListener('click', () => {
+  document.getElementById('cache-panel').classList.toggle('hidden');
+  document.getElementById('cache-toggle').classList.toggle('active');
+});
 async function refreshCacheList() {
   const listEl = document.getElementById('cacheList');
   let manifest;
@@ -981,8 +1288,10 @@ async function refreshCacheSize() {
     [tileCount, parcelCount] = await Promise.all([dbCount('tiles'), dbCount('parcels')]);
   } catch { return; }
   if (tileCount > 0 || parcelCount > 0) {
-    document.getElementById('cache-panel').style.display = 'block';
+    document.getElementById('cache-toggle').style.display = 'flex';
     await refreshCacheList();
+  } else {
+    document.getElementById('cache-toggle').style.display = 'none';
   }
 }
 
@@ -1041,7 +1350,7 @@ map.on('click', (e) => {
   placeQueryMarker();
   updateCacheCircle();
   loadParcelsForLocation();
-  highlightDistrictAt(queryLat, queryLng);
+  highlightDistrictAt(queryLat, queryLng, false);  // highlight but don't open district panel
   document.getElementById('btnCache').disabled = false;
 });
 

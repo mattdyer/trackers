@@ -625,7 +625,7 @@ async function showParcelDistrictPanel(a, owner, distData) {
   `;
 
   // Build district content
-  const distNum = a.DISTINCT ? `#${a.DISTRICT}` : '—';
+  const distNum = a.DISTRICT ? `#${a.DISTRICT}` : '—';
   const areas = [
     a.AREA_AC != null ? `${formatArea(a.AREA_AC)} ac` : '',
     a.AREA_KM != null ? `${Number(a.AREA_KM).toFixed(1)} km²` : '',

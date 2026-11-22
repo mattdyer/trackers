@@ -593,11 +593,19 @@ function switchTab(tabName) {
   // Toggle property vs district content sections
   const body = document.getElementById('panelBody');
   if (tabName === 'district') {
-    // Save refs before clearing (querySelectorAll returns live NodeList)
+    // Save property content before clearing (querySelectorAll is live)
+    if (!_propertyTabContent) {
+      _propertyTabContent = body.innerHTML;
+    }
+    // Save district section refs before clearing
     const distSections = [...body.querySelectorAll('.district-section')];
     body.innerHTML = '';
     distSections.forEach(s => { s.style.display = ''; body.appendChild(s); });
   } else {
+    // Restore property content if not yet saved
+    if (_propertyTabContent) {
+      body.innerHTML = _propertyTabContent;
+    }
     body.querySelectorAll('.district-section').forEach(s => { s.style.display = 'none'; });
   }
 }
@@ -686,6 +694,7 @@ async function showParcelDistrictPanel(a, owner, distData) {
 
   // Load harvestable game data (async)
   let harvestHtml = '';
+  let _harvestSection = null;
   const distKey = String(distData.DISTRICT || '');
   if (distKey) {
     const reg = await loadRegulations();
@@ -706,39 +715,49 @@ async function showParcelDistrictPanel(a, owner, distData) {
       }
       hhtml += '</div>';
       harvestHtml = hhtml;
+    } else {
+      // Regulations loaded but no data for this district
+      harvestHtml = '<div class="section"><div style="font-weight:700;font-size:14px;margin-bottom:6px">Harvestable Game</div><div style="color:#666;font-style:italic;padding:8px">No harvest data available for District ' + distKey + '</div></div>';
     }
+  } else {
+    // No district key
+    harvestHtml = '<div class="section"><div style="font-weight:700;font-size:14px;margin-bottom:6px">Harvestable Game</div><div style="color:#666;font-style:italic;padding:8px">No district assigned</div></div>';
   }
 
   // Build combined content, separating property and district sections
   const body = document.getElementById('panelBody');
-  let propSections = '';
-  let distSections = '';
-  let inDistrict = false;
+  // Use comment markers to reliably split sections (regex fails on nested </div>)
+  const combinedHtml = propHtml + '<!--X-->' + distHtml + '<!--X-->' + harvestHtml;
+  const sectionParts = combinedHtml.split('<!--X-->').filter(p => p.trim());
 
   // Property-related labels
   const propLabels = ['Owner', 'Mailing Addr', 'DBA', 'Property', 'Total Value', 'Land Value', 'Bldg Value', 'Acres', 'Tax Year', 'County', 'Type', 'Geocode', 'T/R/S', 'Legal Desc', 'Subdivision'];
-  const distLabels = ['District', 'Name', 'Region', 'Harvest Type', 'EMU', 'Area'];
 
-  // Build a combined HTML and split by sections
-  const combinedHtml = propHtml + distHtml + harvestHtml;
-  // Use regex to split at section boundaries
-  const sectionMatches = combinedHtml.match(/<div class="section">([\s\S]*?)<\/div>/g) || [];
-
-  // Re-wrap: property sections go in the body directly, district sections go hidden
+  // Categorize sections by type
   body.innerHTML = '';
-  sectionMatches.forEach(s => {
-    const firstLabel = s.match(/<span class="label">([^<]+)/);
-    const label = firstLabel ? firstLabel[1] : '';
-    // Sections without a label span are harvestable game → district tab
-    // Sections with a label not in propLabels are also district tab
-    if (label && propLabels.includes(label)) {
-      body.innerHTML += s;
-    } else {
+  sectionParts.forEach(s => {
+    // Harvestable game has no label span, just a style'd title
+    if (!s.includes('<span class="label">')) {
+      // Harvestable game section → district tab wrapper
       const wrapper = document.createElement('div');
       wrapper.className = 'district-section';
       wrapper.style.display = 'none';
       wrapper.innerHTML = s;
       body.appendChild(wrapper);
+    } else {
+      // Property or district section
+      const firstLabel = s.match(/<span class="label">([^<]+)/);
+      const label = firstLabel ? firstLabel[1] : '';
+      if (label && propLabels.includes(label)) {
+        body.innerHTML += s;
+      } else {
+        // District section → wrapped in district-section
+        const wrapper = document.createElement('div');
+        wrapper.className = 'district-section';
+        wrapper.style.display = 'none';
+        wrapper.innerHTML = s;
+        body.appendChild(wrapper);
+      }
     }
   });
 

@@ -483,7 +483,7 @@ function renderParcels(features) {
 
       // Click on map layer opens the parcel popup (flyout only)
       layer.on('click', (e) => {
-        L.DomEvent.stopPropagation(e.originalEvent);
+        L.DomEvent.stop(e);
         layer.openPopup();
       });
 
@@ -586,8 +586,19 @@ function switchTab(tabName) {
   if (tabName === 'district' && _parcelTabDistrict) {
     titleEl.textContent = `${_parcelTabDistrict.NAME || 'Hunting District'}`;
   } else {
-    const owner = document.getElementById('panelTitle')?.dataset?.owner || '';
+    const owner = titleEl.dataset.owner || '';
     titleEl.textContent = owner || 'Property Details';
+  }
+
+  // Toggle property vs district content sections
+  const body = document.getElementById('panelBody');
+  if (tabName === 'district') {
+    // Save refs before clearing (querySelectorAll returns live NodeList)
+    const distSections = [...body.querySelectorAll('.district-section')];
+    body.innerHTML = '';
+    distSections.forEach(s => { s.style.display = ''; body.appendChild(s); });
+  } else {
+    body.querySelectorAll('.district-section').forEach(s => { s.style.display = 'none'; });
   }
 }
 
@@ -627,38 +638,38 @@ async function showParcelDistrictPanel(a, owner, distData) {
   // Build district content
   const distNum = a.DISTRICT ? `#${a.DISTRICT}` : '—';
   const areas = [
-    a.AREA_AC != null ? `${formatArea(a.AREA_AC)} ac` : '',
-    a.AREA_KM != null ? `${Number(a.AREA_KM).toFixed(1)} km²` : '',
-    a.AREA_MI != null ? `${Number(a.AREA_MI).toFixed(1)} mi²` : '',
+    distData.AREA_AC != null ? `${formatArea(distData.AREA_AC)} ac` : '',
+    distData.AREA_KM != null ? `${Number(distData.AREA_KM).toFixed(1)} km²` : '',
+    distData.AREA_MI != null ? `${Number(distData.AREA_MI).toFixed(1)} mi²` : '',
   ].filter(Boolean).join('  ·  ');
 
   let distLinks = '';
-  if (a.MAPLINK) {
-    distLinks += `<a href="${a.MAPLINK}" target="_blank" rel="noopener">📄 District Map</a>`;
+  if (distData.MAPLINK) {
+    distLinks += `<a href="${distData.MAPLINK}" target="_blank" rel="noopener">📄 District Map</a>`;
   }
-  if (a.DEERWEBPAGE) {
+  if (distData.DEERWEBPAGE) {
     distLinks += distLinks ? '  ·  ' : '';
-    distLinks += `<a href="${a.DEERWEBPAGE}" target="_blank" rel="noopener">🦌 Deer Info</a>`;
+    distLinks += `<a href="${distData.DEERWEBPAGE}" target="_blank" rel="noopener">🦌 Deer Info</a>`;
   }
-  if (a.ELKWEBPAGE) {
+  if (distData.ELKWEBPAGE) {
     distLinks += distLinks ? '  ·  ' : '';
-    distLinks += `<a href="${a.ELKWEBPAGE}" target="_blank" rel="noopener">🦌 Elk Info</a>`;
+    distLinks += `<a href="${distData.ELKWEBPAGE}" target="_blank" rel="noopener">🦌 Elk Info</a>`;
   }
 
   const distHtml = `
     <div class="section">
-      <div class="row"><span class="label">District</span><span class="value">${a.DISTRICT ? '#' + a.DISTRICT : '—'}</span></div>
-      <div class="row"><span class="label">Name</span><span class="value">${a.NAME || '—'}</span></div>
-      <div class="row"><span class="label">Region</span><span class="value">${a.REG != null ? 'Region ' + a.REG : '—'}</span></div>
-      <div class="row"><span class="label">Harvest Type</span><span class="value">${a.HARVTYPE || '—'}</span></div>
-      ${a.EMU_NAME ? `<div class="row"><span class="label">EMU</span><span class="value">${a.EMU_NAME}</span></div>` : ''}
+      <div class="row"><span class="label">District</span><span class="value">${distData.DISTRICT ? '#' + distData.DISTRICT : '—'}</span></div>
+      <div class="row"><span class="label">Name</span><span class="value">${distData.NAME || '—'}</span></div>
+      <div class="row"><span class="label">Region</span><span class="value">${distData.REG != null ? 'Region ' + distData.REG : '—'}</span></div>
+      <div class="row"><span class="label">Harvest Type</span><span class="value">${distData.HARVTYPE || '—'}</span></div>
+      ${distData.EMU_NAME ? `<div class="row"><span class="label">EMU</span><span class="value">${distData.EMU_NAME}</span></div>` : ''}
       ${areas ? `<div class="row"><span class="label">Area</span><span class="value">${areas}</span></div>` : ''}
     </div>
     ${distLinks ? `<div class="section" style="text-align:center"><span style="font-size:14px">${distLinks}</span></div>` : ''}
   `;
 
   // Store district data for tab switching
-  _parcelTabDistrict = a;
+  _parcelTabDistrict = distData;
 
   // Show tab bar
   const tabBar = document.getElementById('tab-bar');
@@ -673,6 +684,31 @@ async function showParcelDistrictPanel(a, owner, distData) {
   // Show property tab by default
   document.getElementById('panelTitle').textContent = owner;
 
+  // Load harvestable game data (async)
+  let harvestHtml = '';
+  const distKey = String(distData.DISTRICT || '');
+  if (distKey) {
+    const reg = await loadRegulations();
+    const harvestReg = reg[distKey];
+    if (harvestReg && (harvestReg.deer || harvestReg.elk)) {
+      let hhtml = '<div class="section"><div style="font-weight:700;font-size:14px;margin-bottom:6px">Harvestable Game</div>';
+      if (harvestReg.deer && harvestReg.deer.length) {
+        hhtml += '<div class="harvest-section-title">🦌 Deer</div>';
+        hhtml += '<ul class="harvest-list">';
+        harvestReg.deer.forEach(d => { hhtml += `<li>${d}</li>`; });
+        hhtml += '</ul>';
+      }
+      if (harvestReg.elk && harvestReg.elk.length) {
+        hhtml += '<div class="harvest-section-title">🦌 Elk</div>';
+        hhtml += '<ul class="harvest-list">';
+        harvestReg.elk.forEach(e => { hhtml += `<li>${e}</li>`; });
+        hhtml += '</ul>';
+      }
+      hhtml += '</div>';
+      harvestHtml = hhtml;
+    }
+  }
+
   // Build combined content, separating property and district sections
   const body = document.getElementById('panelBody');
   let propSections = '';
@@ -684,7 +720,7 @@ async function showParcelDistrictPanel(a, owner, distData) {
   const distLabels = ['District', 'Name', 'Region', 'Harvest Type', 'EMU', 'Area'];
 
   // Build a combined HTML and split by sections
-  const combinedHtml = propHtml + distHtml;
+  const combinedHtml = propHtml + distHtml + harvestHtml;
   // Use regex to split at section boundaries
   const sectionMatches = combinedHtml.match(/<div class="section">([\s\S]*?)<\/div>/g) || [];
 
@@ -693,7 +729,9 @@ async function showParcelDistrictPanel(a, owner, distData) {
   sectionMatches.forEach(s => {
     const firstLabel = s.match(/<span class="label">([^<]+)/);
     const label = firstLabel ? firstLabel[1] : '';
-    if (propLabels.includes(label)) {
+    // Sections without a label span are harvestable game → district tab
+    // Sections with a label not in propLabels are also district tab
+    if (label && propLabels.includes(label)) {
       body.innerHTML += s;
     } else {
       const wrapper = document.createElement('div');
@@ -899,7 +937,8 @@ function toggleDistricts() {
     districtLayer = L.geoJSON(geojson, {
       style: districtStyle,
       onEachFeature: (feature, layer) => {
-        layer.on('click', () => {
+        layer.on('click', (e) => {
+          L.DomEvent.stop(e);
           if (highlightedDistrict) map.removeLayer(highlightedDistrict);
           highlightedDistrict = L.geoJSON(feature, {
             style: highlightStyle(feature)

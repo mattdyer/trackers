@@ -1,0 +1,1400 @@
+{
+  "100": {
+    "deer": [
+      "Antlered Buck Mule Deer",
+      "Antlered Buck White-tailed Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 & PTHFV only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk"
+    ]
+  },
+  "101": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer (Oct 24-Nov 15)",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 & PTHFV only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk (Not valid in North Tobacco Portion)"
+    ]
+  },
+  "103": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer (Outside North Fisher Portion)",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 & PTHFV only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk"
+    ]
+  },
+  "104": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 & PTHFV only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk"
+    ]
+  },
+  "110": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 & PTHFV only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk"
+    ]
+  },
+  "120": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 & PTHFV only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk"
+    ]
+  },
+  "121": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 & PTHFV only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk"
+    ]
+  },
+  "122": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 & PTHFV only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk"
+    ]
+  },
+  "123": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 & PTHFV only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk"
+    ]
+  },
+  "124": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 & PTHFV only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk"
+    ]
+  },
+  "130": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex White-tailed Deer (Youth 10-15 & PTHFV only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk"
+    ]
+  },
+  "140": {
+    "deer": [
+      "Antlered Buck Mule Deer",
+      "Antlered Buck White-tailed Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk"
+    ]
+  },
+  "141": {
+    "deer": [
+      "Antlered Buck Mule Deer",
+      "Antlered Buck White-tailed Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk"
+    ]
+  },
+  "150": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk"
+    ]
+  },
+  "170": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Brow-tined Bull or Antlerless Elk (North of Lake Blaine Rd & West of Hwy 35 only)"
+    ]
+  },
+  "200": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk"
+    ]
+  },
+  "201": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Brow-tined Bull or Antlerless Elk (Private land only; Youth 12-15, PTHFV, or Residents 75+ only)"
+    ]
+  },
+  "202": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk"
+    ]
+  },
+  "204": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer (Oct 24-Nov 15)",
+      "Either-sex White-tailed Deer (Private land only)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Antlerless Elk (Oct 24-Nov 29; Private land in North portion Eight Mile-Turah)",
+      "Brow-tined Bull or Antlerless Elk (Youth 12-15, PTHFV, or Residents 75+ on private land only)"
+    ]
+  },
+  "210": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)",
+      "Antlerless Mule Deer (Outside National Forest; Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Brow-tined Bull or Antlerless Elk (Youth 12-15, PTHFV, or Residents 75+ on private land only)"
+    ]
+  },
+  "211": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Brow-tined Bull or Antlerless Elk (Youth 12-15, PTHFV, or Residents 75+ on private land only)"
+    ]
+  },
+  "212": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer (Oct 24-Nov 15)",
+      "Antlerless Mule Deer (Outside National Forest; Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Brow-tined Bull or Antlerless Elk (Youth 12-15, PTHFV, or Residents 75+ on private land only)"
+    ]
+  },
+  "213": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer (Oct 24-Nov 15)",
+      "Antlerless Mule Deer (Outside National Forest; Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Brow-tined Bull or Antlerless Elk (Youth 12-15, PTHFV, or Residents 75+ on private land only)"
+    ]
+  },
+  "214": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer (Oct 24-Nov 15)",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)",
+      "Antlerless Mule Deer (Outside National Forest; Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk"
+    ]
+  },
+  "215": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer (Oct 24-Nov 15)",
+      "Antlerless Mule Deer (Outside National Forest; Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Brow-tined Bull or Antlerless Elk (Youth 12-15, PTHFV, or Residents 75+ on private land only)"
+    ]
+  },
+  "216": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Brow-tined Bull or Antlerless Elk (Youth 12-15, PTHFV, or Residents 75+ on private land only)"
+    ]
+  },
+  "217": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer (Oct 24-Nov 15)",
+      "Antlerless Mule Deer (Outside National Forest; Youth 10-15 only)"
+    ],
+    "elk": [
+      "Antlerless Elk (Youth 12-15, PTHFV, or Residents 75+ on private land only)"
+    ]
+  },
+  "240": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer (Oct 24-Nov 15)",
+      "Either-sex White-tailed Deer (Private land only)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Antlerless Elk (Oct 24-Nov 01; Outside National Forest boundary only)",
+      "Brow-tined Bull or Antlerless Elk (Youth 12-15, PTHFV, or Residents 75+ on private land only)"
+    ]
+  },
+  "250": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Permit Required for Bull Elk; Elk B License required for Antlerless Elk"
+    ]
+  },
+  "260": {
+    "deer": [
+      "Either-sex White-tailed Deer (ArchEquip only)",
+      "Either-sex Mule Deer (ArchEquip only)"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk (ArchEquip only)"
+    ]
+  },
+  "261": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Either-sex White-tailed Deer (Private land only)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Brow-tined Bull or Antlerless Elk (Youth 12-15, PTHFV, or Residents 75+ on private land only)"
+    ]
+  },
+  "262": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlerless Mule Deer (ArchEquip only)"
+    ],
+    "elk": [
+      "Antlerless Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "270": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Either-sex White-tailed Deer (Private land only)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk (Youth 12-15 only)",
+      "Antlerless Elk (Youth 12-15, PTHFV, or Residents 75+ on private land North of Rye Creek)"
+    ]
+  },
+  "280": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk (Sep 26-Nov 29)"
+    ]
+  },
+  "281": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Brow-tined Bull or Antlerless Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "282": {
+    "deer": [
+      "Permit required for general rifle season"
+    ],
+    "elk": [
+      "Permit required for general rifle season"
+    ]
+  },
+  "284": {
+    "deer": [
+      "Antlered Buck Mule Deer (ArchEquip only)",
+      "Antlered Buck White-tailed Deer (ArchEquip only)"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk (ArchEquip only)"
+    ]
+  },
+  "285": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Brow-tined Bull or Antlerless Elk (Youth 12-15, PTHFV, or Residents 75+ on private land only)"
+    ]
+  },
+  "290": {
+    "deer": [
+      "Either-sex White-tailed Deer (ArchEquip only)",
+      "Antlered Buck Mule Deer (ArchEquip only)"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk (ArchEquip only)",
+      "Antlerless Elk (Firearms allowed outside East Ovando Archery Area)"
+    ]
+  },
+  "291": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Brow-tined Bull or Antlerless Elk (Youth 12-15, PTHFV, or Residents 75+ on private land only)"
+    ]
+  },
+  "292": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer (Oct 24-Nov 15)",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Brow-tined Bull or Antlerless Elk (Youth 12-15, PTHFV, or Residents 75+ on private land only)"
+    ]
+  },
+  "293": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Brow-tined Bull or Antlerless Elk (Youth 12-15, PTHFV, or Residents 75+ on private land only)"
+    ]
+  },
+  "298": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer (Oct 24-Nov 15)",
+      "Either-sex White-tailed Deer (Oct 24-Oct 30)",
+      "Either-sex White-tailed Deer (Youth 10-15 only)"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk"
+    ]
+  },
+  "301": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk (Oct 24-Nov 08)",
+      "Brow-tined Bull Elk (Nov 09-Nov 29)",
+      "Either-sex Elk (Youth 12-15, PTHFV, or Residents 75+ on private land)"
+    ]
+  },
+  "302": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Either-sex Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk",
+      "Either-sex Elk (Youth 12-15, PTHFV, or Residents 75+ on private land)"
+    ]
+  },
+  "303": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlerless Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk",
+      "Either-sex Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "304": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk",
+      "Either-sex Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "309": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Either-sex Mule Deer"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "310": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk (Not valid on FWP/NF lands in Gallatin SMA)"
+    ]
+  },
+  "311": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk",
+      "Either-sex Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "312": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer (West of Springhill/Rocky Mtn Rd)",
+      "Antlerless Mule Deer (East of Springhill/Rocky Mtn Rd; Archery only unless permitted)"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk",
+      "Either-sex Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "313": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer (Oct 24-Nov 15)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk (Oct 24-Nov 15)"
+    ]
+  },
+  "314": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk (South of Rock Creek)",
+      "Brow-tined Bull or Antlerless Elk (North of Rock Creek)",
+      "Either-sex Elk (Youth 12-15, PTHFV, or Residents 75+ on private land)"
+    ]
+  },
+  "315": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "316": {
+    "deer": [
+      "Antlered Buck White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Antlered Bull Elk",
+      "Either-sex Elk (Youth 12-15, PTHFV, or Residents 75+ on private land)"
+    ]
+  },
+  "317": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk",
+      "Either-sex Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "318": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Either-sex Elk (Youth 12-15, PTHFV, or Residents 75+ on private land)"
+    ]
+  },
+  "319": {
+    "deer": [
+      "Either-sex White-tailed Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk (Oct 24-Nov 08)",
+      "Brow-tined Bull Elk (Nov 09-Nov 29)",
+      "Either-sex Elk (Youth 12-15, PTHFV, or Residents 75+ on private land)"
+    ]
+  },
+  "320": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Either-sex Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk",
+      "Either-sex Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "321": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Either-sex Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk",
+      "Either-sex Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "322": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Either-sex Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk",
+      "Either-sex Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "323": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Either-sex Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk (Not valid on Wall Creek WMA)",
+      "Either-sex Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "324": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Either-sex Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk",
+      "Either-sex Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "329": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Either-sex Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk",
+      "Either-sex Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "331": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Either-sex Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Antlerless Elk (Private land only)",
+      "Either-sex Elk (Youth 12-15, PTHFV, or Residents 75+ on private land)"
+    ]
+  },
+  "335": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Antlerless Elk (Not valid on National Forest)",
+      "Either-sex Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "339": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Spike Bull Elk (Oct 24-Nov 15)",
+      "Spike Bull or Antlerless Elk (Nov 16-Nov 29)",
+      "Spike Bull or Antlerless Elk (Youth 12-15, PTHFV, or Residents 75+ on private land)"
+    ]
+  },
+  "340": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk (Oct 24-Nov 08)",
+      "Brow-tined Bull Elk (Nov 09-Nov 29)",
+      "Either-sex Elk (Youth 12-15, PTHFV, or Residents 75+ on private land)"
+    ]
+  },
+  "343": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk (Oct 24-Nov 15)",
+      "Brow-tined Bull or Antlerless Elk (Nov 16-Nov 29)",
+      "Either-sex Elk (Youth 12-15, PTHFV, or Residents 75+ on private land)"
+    ]
+  },
+  "350": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Either-sex Elk (Youth 12-15, PTHFV, or Residents 75+ on private land)"
+    ]
+  },
+  "360": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk",
+      "Either-sex Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "361": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Either-sex Elk (Youth 12-15, PTHFV, or Residents 75+ on private land)"
+    ]
+  },
+  "370": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk",
+      "Either-sex Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "380": {
+    "deer": [
+      "Either-sex White-tailed Deer (Not valid on Canyon Ferry WMA)",
+      "Antlered Buck White-tailed Deer (Canyon Ferry WMA only)",
+      "Antlerless Mule Deer (Drawing permit required for antlered buck mule deer)"
+    ],
+    "elk": [
+      "Spike Bull Elk",
+      "Spike Bull or Antlerless Elk (Youth 12-15, PTHFV, or Residents 75+ on private land)"
+    ]
+  },
+  "388": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Either-sex Mule Deer"
+    ],
+    "elk": [
+      "Spike Bull or Antlerless Elk"
+    ]
+  },
+  "390": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk",
+      "Either-sex Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "391": {
+    "deer": [
+      "Either-sex White-tailed Deer (Not valid on Canyon Ferry WMA)",
+      "Antlered Buck White-tailed Deer (Canyon Ferry WMA only)",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk",
+      "Antlerless Elk (Not valid on National Forest)"
+    ]
+  },
+  "392": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlerless Mule Deer (Permit required for antlered buck)"
+    ],
+    "elk": [
+      "Brow-tined Bull Elk"
+    ]
+  },
+  "393": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk",
+      "Either-sex Elk (Youth 12-15 & PTHFV only)"
+    ]
+  },
+  "400": {
+    "deer": [
+      "Either-sex White-tailed Deer (Oct 24-Nov 15)",
+      "Either-sex Mule Deer (Oct 24-Nov 15)"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "401": {
+    "deer": [
+      "Either-sex White-tailed Deer (Oct 24-Nov 15)",
+      "Either-sex Mule Deer (Oct 24-Nov 15)"
+    ],
+    "elk": [
+      "Antlerless Elk"
+    ]
+  },
+  "403": {
+    "deer": [
+      "Either-sex White-tailed Deer (Oct 24-Nov 15)",
+      "Either-sex Mule Deer (Oct 24-Nov 15)"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "404": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Either-sex Mule Deer"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "405": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Either-sex Mule Deer"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "406": {
+    "deer": [
+      "Either-sex White-tailed Deer (Oct 24-Nov 15)",
+      "Either-sex Mule Deer (Oct 24-Nov 15)"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "410": {
+    "deer": [
+      "Either-sex White-tailed Deer (Permit required for antlered buck mule deer)"
+    ],
+    "elk": [
+      "Drawing Permit Only"
+    ]
+  },
+  "411": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Spike Bull or Antlerless Elk"
+    ]
+  },
+  "412": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Spike Bull or Antlerless Elk"
+    ]
+  },
+  "413": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk"
+    ]
+  },
+  "415": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Antlered Bull Elk"
+    ]
+  },
+  "416": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk"
+    ]
+  },
+  "417": {
+    "deer": [
+      "Either-sex White-tailed Deer (Permit required for antlered buck mule deer)"
+    ],
+    "elk": [
+      "Antlerless Elk (South of D-Y Trail to Knox Ridge Rd; Not valid West of Stafford Ferry Rd)"
+    ]
+  },
+  "418": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk"
+    ]
+  },
+  "419": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "420": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Permit Required for Brow-tined Bull or Antlerless Elk"
+    ]
+  },
+  "421": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Either-sex Mule Deer"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "422": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Either-sex Mule Deer (Outside National Forest)",
+      "Antlered Buck Mule Deer (Inside National Forest)"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "424": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Antlerless Elk (Oct 24-Oct 27)",
+      "Brow-tined Bull Elk (Oct 28-Nov 29)"
+    ]
+  },
+  "425": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Either-sex Mule Deer"
+    ],
+    "elk": [
+      "Antlerless Elk (Outside Sun River WMA)"
+    ]
+  },
+  "426": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer (Oct 24-Nov 15)"
+    ],
+    "elk": [
+      "Antlerless Elk"
+    ]
+  },
+  "432": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk"
+    ]
+  },
+  "441": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer (Inside National Forest)",
+      "Antlered Buck Mule Deer (Oct 24-Nov 08 outside NF)"
+    ],
+    "elk": [
+      "Antlerless Elk",
+      "Brow-tined Bull or Antlerless Elk (Bob Marshall Wilderness only)"
+    ]
+  },
+  "442": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Antlerless Elk (Oct 24-Oct 27)",
+      "Brow-tined Bull or Antlerless Elk (Oct 28-Nov 29; subject to 50 quota)"
+    ]
+  },
+  "444": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Either-sex Mule Deer"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "445": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Either-sex Elk (Oct 24-Nov 08)",
+      "Antlerless Elk (Nov 09-Nov 29)"
+    ]
+  },
+  "446": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk"
+    ]
+  },
+  "447": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer (Outside National Forest; Oct 24-Nov 15)"
+    ],
+    "elk": [
+      "Antlerless Elk (Not valid on National Forest)"
+    ]
+  },
+  "448": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk"
+    ]
+  },
+  "450": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Either-sex Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk"
+    ]
+  },
+  "451": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk"
+    ]
+  },
+  "452": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Brow-tined Bull or Antlerless Elk"
+    ]
+  },
+  "455": {
+    "deer": [
+      "Permit required for General Rifle Deer"
+    ],
+    "elk": [
+      "Drawing Permit Only"
+    ]
+  },
+  "471": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer (Oct 24-Nov 15)"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "502": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex Mule Deer (Private land; Youth 10-15 only)"
+    ],
+    "elk": [
+      "Antlerless Elk",
+      "Drawing Permit required for Bull Elk"
+    ]
+  },
+  "515": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex Mule Deer (Private land; Youth 10-15 only)"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "525": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex Mule Deer (Private land; Youth 10-15 only)"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "535": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlerless Mule Deer (Private land; Youth 10-15 only)",
+      "Drawing Permit required for Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Spike Bull or Antlerless Elk"
+    ]
+  },
+  "540": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex Mule Deer (Private land; Youth 10-15 only)"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "555": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex Mule Deer (Private land; Youth 10-15 only)"
+    ],
+    "elk": [
+      "Drawing Permit Required"
+    ]
+  },
+  "565": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex Mule Deer (Private land; Youth 10-15 only)"
+    ],
+    "elk": [
+      "Antlered Bull Elk"
+    ]
+  },
+  "575": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex Mule Deer (Private land; Youth 10-15 only)"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "580": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex Mule Deer (Private land; Youth 10-15 only)"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "590": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Either-sex Mule Deer (Private land; Youth 10-15 only)"
+    ],
+    "elk": [
+      "Spike Bull or Antlerless Elk"
+    ]
+  },
+  "600": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Antlerless Mule Deer (Private land only)"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "620": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Antlerless Mule Deer (Private land only)"
+    ],
+    "elk": [
+      "Drawing Permit Only"
+    ]
+  },
+  "621": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Drawing Permit Only"
+    ]
+  },
+  "622": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Drawing Permit Only"
+    ]
+  },
+  "630": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Antlerless Mule Deer (Private land only)"
+    ],
+    "elk": [
+      "Drawing Permit Only"
+    ]
+  },
+  "640": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Antlerless Mule Deer (Private land only)"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "650": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Antlerless Mule Deer (Private land only)"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "652": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Permit Required for Antlered Buck Mule Deer"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "670": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Antlerless Mule Deer (Private land only)"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "690": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Antlerless Mule Deer (Private land only)"
+    ],
+    "elk": [
+      "Antlerless Elk"
+    ]
+  },
+  "700": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Antlerless Mule Deer (Private land only)"
+    ],
+    "elk": [
+      "Drawing Permit Only"
+    ]
+  },
+  "701": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Antlerless Mule Deer (Private land only)"
+    ],
+    "elk": [
+      "Either-sex Elk (Outside portion N of Yellowstone R / S of Hwy 12 / W of Sumatra-Hysham Rd)",
+      "Spike Bull or Antlerless Elk (In portion N of Yellowstone R / S of Hwy 12 / W of Sumatra-Hysham Rd)"
+    ]
+  },
+  "702": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Antlerless Mule Deer (Private land only)"
+    ],
+    "elk": [
+      "Spike Bull or Antlerless Elk"
+    ]
+  },
+  "703": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Antlerless Mule Deer (Private land only)"
+    ],
+    "elk": [
+      "Either-sex Elk"
+    ]
+  },
+  "704": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Antlerless Mule Deer (Private land only)"
+    ],
+    "elk": [
+      "Spike Bull or Antlerless Elk (Not valid on National Forest)"
+    ]
+  },
+  "705": {
+    "deer": [
+      "Either-sex White-tailed Deer",
+      "Antlered Buck Mule Deer",
+      "Antlerless Mule Deer (Private land only)"
+    ],
+    "elk": [
+      "Spike Bull or Antlerless Elk (Not valid on National Forest)"
+    ]
+  }
+}
